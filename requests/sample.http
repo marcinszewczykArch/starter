@@ -1,0 +1,33 @@
+### Health Check
+GET {{baseUrl}}/actuator/health
+Accept: application/json
+
+### Get all examples
+GET {{baseUrl}}/api/v1/example
+Accept: application/json
+
+### Create new example
+POST {{baseUrl}}/api/v1/example
+Content-Type: application/json
+
+{
+  "name": "My New Example",
+  "description": "This is a test example created via HTTP client"
+}
+
+### Create example without description
+POST {{baseUrl}}/api/v1/example
+Content-Type: application/json
+
+{
+  "name": "Example without description"
+}
+
+### Create example - validation error (empty name)
+POST {{baseUrl}}/api/v1/example
+Content-Type: application/json
+
+{
+  "name": "",
+  "description": "This should fail validation"
+}

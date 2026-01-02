@@ -1,0 +1,43 @@
+# Build stage
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+WORKDIR /app
+
+# Copy gradle files
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
+COPY gradle.properties .
+
+# Copy backend modules
+COPY backend backend
+COPY config config
+
+# Make gradlew executable
+RUN chmod +x gradlew
+
+# Build the application
+RUN ./gradlew :backend:main:bootJar --no-daemon
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+# Add curl for healthcheck
+RUN apk add --no-cache curl
+
+# Copy the built jar
+COPY --from=builder /app/backend/main/build/libs/app.jar app.jar
+
+# Create non-root user
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+USER appuser
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
+

@@ -1,0 +1,75 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'com.diffplug.spotless'
+    id 'checkstyle'
+}
+
+dependencies {
+    implementation project(':backend:core')
+
+    // Spring Boot starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // Database
+    implementation 'org.flywaydb:flyway-core:10.4.1'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql:10.4.1'
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // OpenAPI / Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+
+    // Micrometer (via actuator)
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Test dependencies
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'io.rest-assured:rest-assured'
+
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+spotless {
+    java {
+        importOrder()
+        removeUnusedImports()
+        googleJavaFormat('1.18.1').aosp()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+checkstyle {
+    toolVersion = '10.12.5'
+    configFile = file("${rootProject.projectDir}/config/checkstyle/checkstyle.xml")
+    maxWarnings = 0
+}
+
+tasks.register('lint') {
+    dependsOn 'spotlessApply', 'checkstyleMain', 'checkstyleTest'
+}
+
+tasks.register('format') {
+    dependsOn 'spotlessApply'
+}
+
+bootJar {
+    archiveFileName = 'app.jar'
+}
+
