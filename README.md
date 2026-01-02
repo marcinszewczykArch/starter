@@ -13,7 +13,6 @@ That's it! The application will be available at:
 - **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:8080
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
-- **Health Check**: http://localhost:8080/actuator/health
 
 ## 📋 Requirements
 
@@ -34,7 +33,6 @@ starter/
 │       │       ├── controller/ # REST controllers
 │       │       ├── domain/     # Domain entities
 │       │       ├── dto/        # Data Transfer Objects
-│       │       ├── feature/    # Feature flags
 │       │       ├── repository/ # Database repositories
 │       │       └── service/    # Business logic
 │       └── src/main/resources/
@@ -54,9 +52,11 @@ starter/
 │   ├── dev.sh                  # Start dev environment
 │   ├── build.sh                # Build all
 │   ├── up.sh                   # Start Docker stack
-│   └── test.sh                 # Run all tests
+│   ├── test.sh                 # Run all tests
+│   └── load-test.sh            # Performance load test
+├── requests/                   # HTTP client requests (IntelliJ)
 ├── config/                     # Shared config
-│   └── checkstyle/             # Checkstyle rules
+│   └── code-format.xml         # Eclipse formatter config
 └── .github/
     └── workflows/
         └── ci.yml              # GitHub Actions CI
@@ -83,11 +83,11 @@ starter/
 # Run tests
 ./gradlew test
 
-# Lint check
+# Lint & format code
 ./gradlew lint
 
-# Format code
-./gradlew format
+# Only check formatting (no changes)
+./gradlew lintCheck
 
 # Run application
 ./gradlew :backend:main:bootRun -Dspring.profiles.active=local
@@ -130,28 +130,6 @@ docker compose -f infra/docker-compose.dev.yml up -d
 docker compose -f infra/docker-compose.yml down
 ```
 
-## 🔌 API Endpoints
-
-### Example API
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/v1/example` | List all examples |
-| GET | `/api/v1/example/{id}` | Get example by ID |
-| POST | `/api/v1/example` | Create new example |
-| PUT | `/api/v1/example/{id}` | Update example |
-| DELETE | `/api/v1/example/{id}` | Delete example |
-| GET | `/api/v1/example/feature-status` | Check feature flag |
-
-### Actuator Endpoints
-
-| Endpoint | Description |
-|----------|-------------|
-| `/actuator/health` | Health check |
-| `/actuator/info` | Application info |
-| `/actuator/metrics` | Metrics |
-| `/actuator/prometheus` | Prometheus metrics |
-
 ## 🧪 Testing
 
 ### Backend Tests
@@ -165,7 +143,6 @@ Backend uses Testcontainers for integration tests. No local database required.
 Tests include:
 - Application context loading
 - Flyway migrations
-- Repository operations
 - REST endpoint integration tests
 
 ### Frontend Tests
@@ -201,27 +178,6 @@ npm run test
 |----------|---------|-------------|
 | `VITE_API_BASE_URL` | (empty) | API base URL |
 
-## 🏷 Feature Flags
-
-Feature flags are configured in `application.yml`:
-
-```yaml
-app:
-  feature-flags:
-    example-feature: true
-```
-
-Usage in code:
-
-```java
-@Autowired
-private FeatureFlagService featureFlagService;
-
-if (featureFlagService.isEnabled(FeatureFlag.EXAMPLE_FEATURE)) {
-    // Feature-specific code
-}
-```
-
 ## 📝 Tech Stack
 
 ### Backend
@@ -232,7 +188,7 @@ if (featureFlagService.isEnabled(FeatureFlag.EXAMPLE_FEATURE)) {
 - Flyway
 - SpringDoc OpenAPI (Swagger)
 - Testcontainers
-- Spotless + Checkstyle
+- Spotless + Error Prone + NullAway
 
 ### Frontend
 - React 18
@@ -250,4 +206,3 @@ if (featureFlagService.isEnabled(FeatureFlag.EXAMPLE_FEATURE)) {
 ## 📄 License
 
 MIT
-
