@@ -3,6 +3,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.4' apply false
     id 'org.springframework.boot' version '3.2.1' apply false
     id 'com.diffplug.spotless' version '6.23.3' apply false
+    id 'net.ltgt.errorprone' version '3.1.0' apply false
 }
 
 allprojects {
@@ -16,15 +17,78 @@ allprojects {
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'net.ltgt.errorprone'
+    apply plugin: 'com.diffplug.spotless'
 
     java {
         sourceCompatibility = JavaVersion.VERSION_21
         targetCompatibility = JavaVersion.VERSION_21
     }
 
+    dependencies {
+        errorprone 'com.google.errorprone:error_prone_core:2.24.1'
+        errorprone 'com.uber.nullaway:nullaway:0.10.18'
+    }
+
     tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
         options.compilerArgs << '-parameters'
+        options.compilerArgs += ["-Xlint:all,-serial,-processing,-deprecation"]
+
+        // On CI treat warnings as errors
+        if (System.getenv("CI")) {
+            options.compilerArgs += ["-Werror"]
+        }
+
+        options.errorprone {
+            disableWarningsInGeneratedCode = true
+
+            option("NullAway:AnnotatedPackages", "com.starter")
+            option("NullAway:CheckOptionalEmptiness", "true")
+
+            // NullAway disabled by default, enable when ready
+            disable("NullAway")
+
+            // Disable errorprone for tests (can be enabled later)
+            if (name.toLowerCase().contains("test")) {
+                enabled = false
+            }
+        }
+    }
+
+    // Spotless configuration
+    spotless {
+        java {
+            targetExclude("build/")
+
+            removeUnusedImports()
+            importOrder("\\#", "", "com.starter", "jakarta", "java")
+            eclipse().configFile(rootProject.file("config/code-format.xml"))
+            formatAnnotations()
+
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        yaml {
+            target '**/*.y*ml'
+            targetExclude("build/")
+            endWithNewline()
+        }
+    }
+
+    tasks.register('lint') {
+        dependsOn 'spotlessApply'
+    }
+
+    tasks.register('lintCheck') {
+        dependsOn 'spotlessCheck'
+    }
+
+    tasks.register('format') {
+        dependsOn 'spotlessApply'
+    }
+
+    tasks.named('check') {
+        dependsOn 'lintCheck'
     }
 }
-

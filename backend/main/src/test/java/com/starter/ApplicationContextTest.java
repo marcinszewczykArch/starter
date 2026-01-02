@@ -9,7 +9,8 @@ import org.springframework.context.ApplicationContext;
 /** Test to verify that the Spring application context loads successfully. */
 class ApplicationContextTest extends BaseIntegrationTest {
 
-    @Autowired private ApplicationContext applicationContext;
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @Test
     void contextLoads() {

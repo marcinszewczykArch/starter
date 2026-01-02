@@ -4,9 +4,10 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
-import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
@@ -14,19 +15,23 @@ public class OpenApiConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-                .info(
-                        new Info()
-                                .title("Starter API")
-                                .version("1.0.0")
-                                .description("REST API for Starter application")
-                                .contact(
-                                        new Contact()
-                                                .name("Starter Team")
-                                                .email("team@starter.com")))
-                .servers(
-                        List.of(
-                                new Server()
-                                        .url("http://localhost:8080")
-                                        .description("Local server")));
+            .info(
+                new Info()
+                    .title("Starter API")
+                    .version("1.0.0")
+                    .description("REST API for Starter application")
+                    .contact(
+                        new Contact()
+                            .name("Starter Team")
+                            .email("team@starter.com")
+                    )
+            )
+            .servers(
+                List.of(
+                    new Server()
+                        .url("http://localhost:8080")
+                        .description("Local server")
+                )
+            );
     }
 }

@@ -16,10 +16,10 @@ public abstract class BaseIntegrationTest {
 
     @Container
     static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("starter_test")
-                    .withUsername("test")
-                    .withPassword("test");
+        new PostgreSQLContainer<>("postgres:16-alpine")
+            .withDatabaseName("starter_test")
+            .withUsername("test")
+            .withPassword("test");
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {

@@ -10,9 +10,11 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 /** Test to verify that Flyway migrations run successfully. */
 class FlywayMigrationTest extends BaseIntegrationTest {
 
-    @Autowired private Flyway flyway;
+    @Autowired
+    private Flyway flyway;
 
-    @Autowired private JdbcClient jdbcClient;
+    @Autowired
+    private JdbcClient jdbcClient;
 
     @Test
     void flywayMigrationsApplied() {
@@ -33,10 +35,10 @@ class FlywayMigrationTest extends BaseIntegrationTest {
     @Test
     void sampleDataLoaded() {
         Long count =
-                jdbcClient
-                        .sql("SELECT COUNT(*) FROM examples WHERE name LIKE 'Sample%'")
-                        .query(Long.class)
-                        .single();
+            jdbcClient
+                .sql("SELECT COUNT(*) FROM examples WHERE name LIKE 'Sample%'")
+                .query(Long.class)
+                .single();
 
         assertThat(count).isGreaterThanOrEqualTo(2L);
     }
