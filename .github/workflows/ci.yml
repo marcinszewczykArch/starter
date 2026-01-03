@@ -23,11 +23,29 @@ jobs:
   # BACKEND JOB - Java/Spring Boot
   # ===========================================================================
   # Builds and tests the backend application using Gradle.
-  # Uses Testcontainers for integration tests (Docker-in-Docker).
+  # Uses PostgreSQL service for integration tests.
   # ===========================================================================
   backend:
     name: Backend
     runs-on: ubuntu-latest
+
+    # -------------------------------------------------------------------------
+    # PostgreSQL service for integration tests
+    # -------------------------------------------------------------------------
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: starter
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       # -----------------------------------------------------------------------
@@ -72,7 +90,7 @@ jobs:
         run: ./gradlew lintCheck
 
       # -----------------------------------------------------------------------
-      # Test - run unit and integration tests (uses Testcontainers for DB)
+      # Test - run unit and integration tests (uses PostgreSQL service)
       # -----------------------------------------------------------------------
       - name: Test
         run: ./gradlew test

@@ -7,4 +7,3 @@ spring:
 logging:
   level:
     com.starter: DEBUG
-    org.springframework.jdbc: DEBUG

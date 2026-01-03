@@ -44,7 +44,8 @@ starter/
 │       └── test/               # Test files
 ├── infra/                      # Infrastructure files
 │   ├── docker-compose.yml      # Full stack compose
-│   ├── docker-compose.dev.yml  # Dev DB only
+│   ├── docker-compose.dev.yml  # Dev database (port 5432)
+│   ├── docker-compose.test.yml # Test database (port 5433)
 │   ├── Dockerfile.backend
 │   ├── Dockerfile.frontend
 │   └── nginx.conf
@@ -52,8 +53,7 @@ starter/
 │   ├── dev.sh                  # Start dev environment
 │   ├── build.sh                # Build all
 │   ├── up.sh                   # Start Docker stack
-│   ├── test.sh                 # Run all tests
-│   └── load-test.sh            # Performance load test
+│   └── test.sh                 # Run all tests
 ├── requests/                   # HTTP client requests (IntelliJ)
 ├── config/                     # Shared config
 │   └── code-format.xml         # Eclipse formatter config
@@ -120,8 +120,11 @@ npm run build
 ### Docker
 
 ```bash
-# Start only PostgreSQL (for local development)
+# Start dev database (port 5432)
 docker compose -f infra/docker-compose.dev.yml up -d
+
+# Start test database (port 5433)
+docker compose -f infra/docker-compose.test.yml up -d
 
 # Start full stack (PostgreSQL + Backend + Frontend)
 ./scripts/up.sh
@@ -134,16 +137,18 @@ docker compose -f infra/docker-compose.yml down
 
 ### Backend Tests
 
-Backend uses Testcontainers for integration tests. No local database required.
+Integration tests use a separate PostgreSQL instance (port 5433) for isolation.
 
 ```bash
+# Start test database and run tests
+./scripts/test.sh
+
+# Or manually:
+docker compose -f infra/docker-compose.test.yml up -d
 ./gradlew test
 ```
 
-Tests include:
-- Application context loading
-- Flyway migrations
-- REST endpoint integration tests
+Database is cleaned before each test for full isolation.
 
 ### Frontend Tests
 
@@ -158,8 +163,8 @@ npm run test
 
 ### Backend Profiles
 
-- `local` - Local development with local PostgreSQL
-- `test` - Testing with Testcontainers
+- `local` - Local development (PostgreSQL on port 5432)
+- `test` - Testing (PostgreSQL on port 5433)
 
 ### Environment Variables
 
@@ -187,7 +192,6 @@ npm run test
 - PostgreSQL 16
 - Flyway
 - SpringDoc OpenAPI (Swagger)
-- Testcontainers
 - Spotless + Error Prone + NullAway
 
 ### Frontend

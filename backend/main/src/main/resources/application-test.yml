@@ -1,10 +1,9 @@
 spring:
   datasource:
-    url: jdbc:tc:postgresql:16:///starter
-    username: test
-    password: test
+    url: jdbc:postgresql://localhost:5433/starter
+    username: postgres
+    password: postgres
 
 logging:
   level:
     com.starter: DEBUG
-    org.testcontainers: INFO

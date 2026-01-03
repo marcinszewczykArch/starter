@@ -14,6 +14,18 @@ NC='\033[0m'
 
 cd "$PROJECT_ROOT"
 
+# Start test database if not running
+echo ""
+echo "🐘 Starting test database..."
+docker compose -f "$PROJECT_ROOT/infra/docker-compose.test.yml" up -d
+
+# Wait for database to be ready
+echo "⏳ Waiting for test database..."
+until docker compose -f "$PROJECT_ROOT/infra/docker-compose.test.yml" exec -T postgres pg_isready -U postgres -d starter >/dev/null 2>&1; do
+    sleep 1
+done
+echo "✅ Test database ready"
+
 # Run backend tests
 echo ""
 echo "☕ Running backend tests..."
@@ -35,4 +47,3 @@ echo -e "${GREEN}✅ Frontend tests passed${NC}"
 
 echo ""
 echo -e "${GREEN}🎉 All tests passed!${NC}"
-
