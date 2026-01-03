@@ -1,4 +1,4 @@
-package com.starter.test;
+package com.starter.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;

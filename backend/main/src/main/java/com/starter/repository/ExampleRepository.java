@@ -10,7 +10,6 @@ import com.starter.domain.Example;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 
 /** Repository for Example entity using JdbcClient. */
@@ -34,7 +33,7 @@ public class ExampleRepository {
 
     /** Save a new example. */
     public Example save(Example example) {
-        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
+        LocalDateTime now = LocalDateTime.now();
         Long id =
             jdbcClient
                 .sql(

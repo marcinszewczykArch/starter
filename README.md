@@ -25,7 +25,6 @@ That's it! The application will be available at:
 ```
 starter/
 ├── backend/                    # Java/Spring Boot backend
-│   ├── core/                   # Shared utilities module
 │   └── main/                   # Main application module
 │       ├── src/main/java/
 │       │   └── com/starter/
