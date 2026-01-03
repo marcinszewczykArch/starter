@@ -55,7 +55,9 @@ export function ApiStatus() {
 
   return (
     <div className={`api-status ${isUp ? 'api-status--up' : 'api-status--down'}`}>
-      <div className={`status-indicator ${isUp ? 'status-indicator--up' : 'status-indicator--down'}`} />
+      <div
+        className={`status-indicator ${isUp ? 'status-indicator--up' : 'status-indicator--down'}`}
+      />
       <div className="status-content">
         <span className="status-label">API Status</span>
         <span className="status-value">{isUp ? 'Healthy' : 'Down'}</span>
@@ -73,4 +75,3 @@ export function ApiStatus() {
     </div>
   );
 }
-

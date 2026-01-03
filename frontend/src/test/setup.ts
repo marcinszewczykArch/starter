@@ -7,4 +7,3 @@ global.fetch = vi.fn();
 beforeEach(() => {
   vi.resetAllMocks();
 });
-

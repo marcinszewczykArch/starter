@@ -25,19 +25,19 @@ describe('ExampleList', () => {
 
   it('renders loading state', () => {
     render(<ExampleList examples={[]} loading={true} />);
-    
+
     expect(screen.getByText('Loading examples...')).toBeInTheDocument();
   });
 
   it('renders empty state when no examples', () => {
     render(<ExampleList examples={[]} loading={false} />);
-    
+
     expect(screen.getByText('No examples found')).toBeInTheDocument();
   });
 
   it('renders list of examples', () => {
     render(<ExampleList examples={mockExamples} loading={false} />);
-    
+
     expect(screen.getByText('Test Example 1')).toBeInTheDocument();
     expect(screen.getByText('Test Example 2')).toBeInTheDocument();
     expect(screen.getByText('Description for example 1')).toBeInTheDocument();
@@ -45,16 +45,15 @@ describe('ExampleList', () => {
 
   it('shows active status for active examples', () => {
     render(<ExampleList examples={mockExamples} loading={false} />);
-    
+
     expect(screen.getByText('Active')).toBeInTheDocument();
     expect(screen.getByText('Inactive')).toBeInTheDocument();
   });
 
   it('displays example IDs', () => {
     render(<ExampleList examples={mockExamples} loading={false} />);
-    
+
     expect(screen.getByText('1')).toBeInTheDocument();
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 });
-

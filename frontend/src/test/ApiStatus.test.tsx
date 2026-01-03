@@ -9,9 +9,9 @@ describe('ApiStatus', () => {
 
   it('shows loading state initially', () => {
     vi.mocked(global.fetch).mockImplementation(() => new Promise(() => {}));
-    
+
     render(<ApiStatus />);
-    
+
     expect(screen.getByText('Checking API status...')).toBeInTheDocument();
   });
 
@@ -60,4 +60,3 @@ describe('ApiStatus', () => {
     });
   });
 });
-

@@ -7,4 +7,3 @@ export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost
 export const API_ENDPOINTS = {
   examples: '/api/v1/example',
 } as const;
-

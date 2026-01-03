@@ -10,4 +10,3 @@ export const healthApi = {
     return response.json();
   },
 };
-

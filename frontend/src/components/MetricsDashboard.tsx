@@ -38,10 +38,7 @@ function MetricCard({ title, value, subtitle, icon, color = 'orange', progress }
         {subtitle && <div className="metric-subtitle">{subtitle}</div>}
         {progress !== undefined && (
           <div className="metric-progress">
-            <div
-              className="metric-progress-bar"
-              style={{ width: `${Math.min(progress, 100)}%` }}
-            />
+            <div className="metric-progress-bar" style={{ width: `${Math.min(progress, 100)}%` }} />
           </div>
         )}
       </div>
@@ -91,17 +88,16 @@ export function MetricsDashboard() {
 
   if (!metrics) return null;
 
-  const memoryPercent = metrics.jvmMemoryMax > 0 
-    ? (metrics.jvmMemoryUsed / metrics.jvmMemoryMax) * 100 
-    : 0;
-  
-  const diskPercent = metrics.diskTotal > 0 
-    ? ((metrics.diskTotal - metrics.diskFree) / metrics.diskTotal) * 100 
-    : 0;
+  const memoryPercent =
+    metrics.jvmMemoryMax > 0 ? (metrics.jvmMemoryUsed / metrics.jvmMemoryMax) * 100 : 0;
 
-  const dbUtilization = metrics.dbConnectionsMax > 0
-    ? (metrics.dbConnectionsActive / metrics.dbConnectionsMax) * 100
-    : 0;
+  const diskPercent =
+    metrics.diskTotal > 0 ? ((metrics.diskTotal - metrics.diskFree) / metrics.diskTotal) * 100 : 0;
+
+  const dbUtilization =
+    metrics.dbConnectionsMax > 0
+      ? (metrics.dbConnectionsActive / metrics.dbConnectionsMax) * 100
+      : 0;
 
   return (
     <div className="metrics-dashboard">
@@ -109,7 +105,7 @@ export function MetricsDashboard() {
         <h2 className="metrics-title">📊 System Metrics</h2>
         <span className="metrics-refresh">Auto-refresh: 5s</span>
       </div>
-      
+
       <div className="metrics-grid">
         <MetricCard
           icon="🧠"
@@ -119,7 +115,7 @@ export function MetricsDashboard() {
           color="blue"
           progress={memoryPercent}
         />
-        
+
         <MetricCard
           icon="💾"
           title="Disk Usage"
@@ -128,7 +124,7 @@ export function MetricsDashboard() {
           color="purple"
           progress={diskPercent}
         />
-        
+
         <MetricCard
           icon="🔄"
           title="HTTP Requests"
@@ -136,7 +132,7 @@ export function MetricsDashboard() {
           subtitle={`Total time: ${formatTime(metrics.httpRequestsTime)}`}
           color="green"
         />
-        
+
         <MetricCard
           icon="🗄️"
           title="DB Connections"
@@ -145,7 +141,7 @@ export function MetricsDashboard() {
           color="cyan"
           progress={dbUtilization}
         />
-        
+
         <MetricCard
           icon="🧵"
           title="JVM Threads"
@@ -153,7 +149,7 @@ export function MetricsDashboard() {
           subtitle="Live threads"
           color="yellow"
         />
-        
+
         <MetricCard
           icon="⚡"
           title="CPU Usage"
@@ -161,7 +157,7 @@ export function MetricsDashboard() {
           color="red"
           progress={metrics.cpuUsage * 100}
         />
-        
+
         <MetricCard
           icon="🚀"
           title="Startup Time"
@@ -173,4 +169,3 @@ export function MetricsDashboard() {
     </div>
   );
 }
-

@@ -64,7 +64,10 @@ function App() {
           </section>
 
           <div className="content-grid">
-            <section className="card status-card animate-slide-up" style={{ animationDelay: '100ms' }}>
+            <section
+              className="card status-card animate-slide-up"
+              style={{ animationDelay: '100ms' }}
+            >
               <h2 className="card-title">API Status</h2>
               <ApiStatus />
             </section>
@@ -132,4 +135,3 @@ function App() {
 }
 
 export default App;
-
