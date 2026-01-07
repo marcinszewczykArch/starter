@@ -1,0 +1,20 @@
+# Copy this file to terraform.tfvars and fill in your values
+# DO NOT commit terraform.tfvars to git!
+
+aws_region    = "eu-central-1"
+environment   = "prod"
+app_name      = "starter"
+
+# EC2
+ec2_instance_type = "t3.small"
+ec2_key_name      = "your-key-pair-name"  # Must exist in AWS!
+
+# RDS
+db_instance_class = "db.t3.micro"
+db_name           = "starter"
+db_username       = "postgres"
+db_password       = "YourSecurePassword123!"  # Change this!
+
+# Security - restrict SSH to your IP
+allowed_ssh_cidr = "1.2.3.4/32"  # Your public IP
+

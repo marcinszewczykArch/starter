@@ -9,7 +9,7 @@ import com.starter.domain.Example;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 /** Repository for Example entity using JdbcClient. */
@@ -33,7 +33,7 @@ public class ExampleRepository {
 
     /** Save a new example. */
     public Example save(Example example) {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         Long id =
             jdbcClient
                 .sql(
@@ -69,8 +69,8 @@ public class ExampleRepository {
                 .name(rs.getString("name"))
                 .description(rs.getString("description"))
                 .active(rs.getBoolean("active"))
-                .createdAt(rs.getTimestamp("created_at").toLocalDateTime())
-                .updatedAt(rs.getTimestamp("updated_at").toLocalDateTime())
+                .createdAt(rs.getTimestamp("created_at").toInstant())
+                .updatedAt(rs.getTimestamp("updated_at").toInstant())
                 .build();
         }
     }
