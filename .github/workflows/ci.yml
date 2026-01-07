@@ -297,3 +297,6 @@ jobs:
             echo "Waiting for health check..."
             sleep 30
             curl -sf http://localhost/actuator/health || echo "Health check pending..."
+            
+            echo "=== Deployment finished ==="
+            exit 0
