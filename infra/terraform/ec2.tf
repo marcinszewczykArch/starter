@@ -17,15 +17,25 @@ resource "aws_instance" "app" {
     # Update system
     yum update -y
 
-    # Install Docker
+    # Install Docker (official method for Amazon Linux 2023)
     yum install -y docker git
     systemctl start docker
     systemctl enable docker
     usermod -aG docker ec2-user
 
-    # Install Docker Compose
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    # Install Docker Compose V2 as plugin
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /usr/local/lib/docker/cli-plugins/docker-compose
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+    # Also install as standalone for compatibility
+    cp /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
+
+    # Install Docker Buildx
+    mkdir -p /usr/local/lib/docker/cli-plugins
+    curl -SL "https://github.com/docker/buildx/releases/latest/download/buildx-v0.19.3.linux-amd64" -o /usr/local/lib/docker/cli-plugins/docker-buildx
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
 
     # Create app directory
     mkdir -p /home/ec2-user/app
