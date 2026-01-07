@@ -61,8 +61,7 @@ starter/
 │   └── code-format.xml         # Eclipse formatter config
 └── .github/
     └── workflows/
-        ├── ci.yml              # GitHub Actions CI
-        └── deploy.yml          # Production deployment
+        └── ci.yml              # GitHub Actions CI/CD (tests + deploy)
 ```
 
 ## 🛠 Available Commands

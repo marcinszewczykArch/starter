@@ -1,37 +1,31 @@
 # =============================================================================
-# CI Pipeline - Continuous Integration for Starter project
+# CI/CD Pipeline - Build, Test, and Deploy
 # =============================================================================
-# This workflow runs on every push and pull request to verify code quality,
-# run tests, and build artifacts.
+# Runs tests on all branches.
+# Deploys to production on push to master.
 # =============================================================================
 
-name: CI
+name: CI/CD
 
-# -----------------------------------------------------------------------------
-# Triggers - when this workflow runs
-# -----------------------------------------------------------------------------
 on:
-  # Run on every push to any branch
   push:
     branches: ['*']
-  # Run on pull requests targeting main branches
   pull_request:
     branches: [main, master, develop]
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '20'
 
 jobs:
   # ===========================================================================
-  # BACKEND JOB - Java/Spring Boot
-  # ===========================================================================
-  # Builds and tests the backend application using Gradle.
-  # Uses PostgreSQL service for integration tests.
+  # BACKEND - Java/Spring Boot
   # ===========================================================================
   backend:
     name: Backend
     runs-on: ubuntu-latest
 
-    # -------------------------------------------------------------------------
-    # PostgreSQL service for integration tests
-    # -------------------------------------------------------------------------
     services:
       postgres:
         image: postgres:16-alpine
@@ -48,140 +42,82 @@ jobs:
           --health-retries 5
 
     steps:
-      # -----------------------------------------------------------------------
-      # Checkout - clone the repository
-      # -----------------------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # -----------------------------------------------------------------------
-      # Java Setup - install Java 21 (Temurin/Adoptium distribution)
-      # -----------------------------------------------------------------------
       - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
 
-      # -----------------------------------------------------------------------
-      # Gradle Cache - speeds up builds by caching downloaded dependencies
-      # Key is based on gradle files hash - cache invalidates when deps change
-      # -----------------------------------------------------------------------
-      - name: Cache Gradle packages
+      - name: Cache Gradle
         uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          restore-keys: ${{ runner.os }}-gradle-
 
-      # -----------------------------------------------------------------------
-      # Make gradlew executable (required on Linux runners)
-      # -----------------------------------------------------------------------
-      - name: Grant execute permission for gradlew
+      - name: Grant execute permission
         run: chmod +x gradlew
 
-      # -----------------------------------------------------------------------
-      # Lint - check code formatting with Spotless and Error Prone
-      # -----------------------------------------------------------------------
       - name: Lint
         run: ./gradlew lintCheck
 
-      # -----------------------------------------------------------------------
-      # Test - run unit and integration tests (uses PostgreSQL service)
-      # -----------------------------------------------------------------------
       - name: Test
         run: ./gradlew test
 
-      # -----------------------------------------------------------------------
-      # Build - compile and package the application (skip tests, already ran)
-      # -----------------------------------------------------------------------
       - name: Build
         run: ./gradlew build -x test
 
-      # -----------------------------------------------------------------------
-      # Upload test reports - save test results as artifacts for debugging
-      # Runs even if tests fail (if: always())
-      # -----------------------------------------------------------------------
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: backend-test-results
-          path: |
-            backend/core/build/reports/tests/
-            backend/main/build/reports/tests/
+          path: backend/main/build/reports/tests/
           retention-days: 7
 
   # ===========================================================================
-  # FRONTEND JOB - React/TypeScript
-  # ===========================================================================
-  # Builds and tests the frontend application using npm.
-  # Runs linting, formatting checks, and Vitest tests.
+  # FRONTEND - React/TypeScript
   # ===========================================================================
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
 
-    # All commands run in the frontend/ directory by default
     defaults:
       run:
         working-directory: frontend
 
     steps:
-      # -----------------------------------------------------------------------
-      # Checkout - clone the repository
-      # -----------------------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # -----------------------------------------------------------------------
-      # Node.js Setup - install Node 20 with npm cache
-      # -----------------------------------------------------------------------
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      # -----------------------------------------------------------------------
-      # Install dependencies - clean install from package-lock.json
-      # npm ci is faster and more reliable than npm install for CI
-      # -----------------------------------------------------------------------
       - name: Install dependencies
         run: npm ci
 
-      # -----------------------------------------------------------------------
-      # Lint - check code with ESLint
-      # -----------------------------------------------------------------------
       - name: Lint
         run: npm run lint
 
-      # -----------------------------------------------------------------------
-      # Format check - verify code formatting with Prettier (no changes)
-      # -----------------------------------------------------------------------
       - name: Format check
         run: npm run format:check
 
-      # -----------------------------------------------------------------------
-      # Test - run Vitest tests
-      # -----------------------------------------------------------------------
       - name: Test
         run: npm run test
 
-      # -----------------------------------------------------------------------
-      # Build - create production build in dist/ folder
-      # -----------------------------------------------------------------------
       - name: Build
         run: npm run build
 
-      # -----------------------------------------------------------------------
-      # Upload build - save production build as artifact for deployment
-      # -----------------------------------------------------------------------
-      - name: Upload build artifacts
+      - name: Upload build
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
@@ -189,60 +125,63 @@ jobs:
           retention-days: 7
 
   # ===========================================================================
-  # DOCKER JOB - Build Docker images
+  # DEPLOY - Production (master branch only)
   # ===========================================================================
-  # Builds Docker images for backend and frontend.
-  # Only runs on push to main branch (not on PRs or other branches).
-  # Requires both backend and frontend jobs to pass first.
-  # ===========================================================================
-  docker:
-    name: Docker Build
+  deploy:
+    name: Deploy to Production
     runs-on: ubuntu-latest
-    
-    # Wait for backend and frontend jobs to complete successfully
     needs: [backend, frontend]
-    
-    # Only run on push to main branch (skip on PRs and other branches)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:
-      # -----------------------------------------------------------------------
-      # Checkout - clone the repository
-      # -----------------------------------------------------------------------
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # -----------------------------------------------------------------------
-      # Docker Buildx - advanced Docker builder with caching support
-      # -----------------------------------------------------------------------
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # -----------------------------------------------------------------------
-      # Build backend image - creates Docker image for Spring Boot app
-      # Uses GitHub Actions cache for faster builds
-      # push: false means it only builds, doesn't push to registry
-      # -----------------------------------------------------------------------
-      - name: Build backend image
-        uses: docker/build-push-action@v5
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          context: .
-          file: infra/Dockerfile.backend
-          push: false
-          tags: starter-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # -----------------------------------------------------------------------
-      # Build frontend image - creates Docker image for React app (with Nginx)
-      # Uses GitHub Actions cache for faster builds
-      # -----------------------------------------------------------------------
-      - name: Build frontend image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: infra/Dockerfile.frontend
-          push: false
-          tags: starter-frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            
+            cd /home/ec2-user/app
+            
+            # Clone repo if first deploy, otherwise pull latest
+            if [ ! -d ".git" ]; then
+              echo "First deploy - cloning repository..."
+              git clone https://github.com/${{ github.repository }} .
+            else
+              echo "Pulling latest changes..."
+              git fetch origin
+              git reset --hard origin/master
+            fi
+            
+            # Create .env file with secrets
+            echo "Creating environment file..."
+            cat > .env << 'EOF'
+            DB_URL=${{ secrets.DB_URL }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            SWAGGER_USER=${{ secrets.SWAGGER_USER }}
+            SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
+            EOF
+            
+            # Build and deploy
+            echo "Building and starting containers..."
+            cd infra
+            docker-compose -f docker-compose.prod.yml --env-file ../.env down || true
+            docker-compose -f docker-compose.prod.yml --env-file ../.env build --no-cache
+            docker-compose -f docker-compose.prod.yml --env-file ../.env up -d
+            
+            # Cleanup old images
+            echo "Cleaning up old images..."
+            docker image prune -f
+            
+            # Show status
+            echo "Deployment complete! Container status:"
+            docker-compose -f docker-compose.prod.yml ps
+            
+            # Wait and check health
+            echo "Waiting for health check..."
+            sleep 30
+            curl -sf http://localhost/actuator/health || echo "Health check pending..."
