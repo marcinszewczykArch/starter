@@ -243,6 +243,8 @@ jobs:
             docker buildx version
             
             echo "=== Step 2: Get code ==="
+            # Ensure app directory exists
+            mkdir -p /home/ec2-user/app
             cd /home/ec2-user/app
             
             # Clone repo if first deploy, otherwise pull latest
