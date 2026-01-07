@@ -33,9 +33,12 @@ resource "aws_instance" "app" {
     chmod +x /usr/local/bin/docker-compose
 
     # Install Docker Buildx
-    mkdir -p /usr/local/lib/docker/cli-plugins
-    curl -SL "https://github.com/docker/buildx/releases/latest/download/buildx-v0.19.3.linux-amd64" -o /usr/local/lib/docker/cli-plugins/docker-buildx
+    BUILDX_VERSION=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+    curl -SL "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64" -o /usr/local/lib/docker/cli-plugins/docker-buildx
     chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
+    
+    # Setup buildx
+    docker buildx install
 
     # Create app directory
     mkdir -p /home/ec2-user/app

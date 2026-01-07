@@ -231,6 +231,17 @@ jobs:
           script: |
             set -e
             
+            # Ensure Docker Buildx is installed
+            echo "Checking Docker Buildx..."
+            if ! docker buildx version > /dev/null 2>&1; then
+              echo "Installing Docker Buildx..."
+              sudo mkdir -p /usr/local/lib/docker/cli-plugins
+              BUILDX_VERSION=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
+              sudo curl -SL "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64" -o /usr/local/lib/docker/cli-plugins/docker-buildx
+              sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
+            fi
+            docker buildx version
+            
             cd /home/ec2-user/app
             
             # Clone repo if first deploy, otherwise pull latest
@@ -256,9 +267,9 @@ jobs:
             # Build and deploy
             echo "Building and starting containers..."
             cd infra
-            docker-compose -f docker-compose.prod.yml --env-file ../.env down || true
-            docker-compose -f docker-compose.prod.yml --env-file ../.env build --no-cache
-            docker-compose -f docker-compose.prod.yml --env-file ../.env up -d
+            docker compose -f docker-compose.prod.yml --env-file ../.env down || true
+            docker compose -f docker-compose.prod.yml --env-file ../.env build --no-cache
+            docker compose -f docker-compose.prod.yml --env-file ../.env up -d
             
             # Cleanup old images
             echo "Cleaning up old images..."
@@ -266,7 +277,7 @@ jobs:
             
             # Show status
             echo "Deployment complete! Container status:"
-            docker-compose -f docker-compose.prod.yml ps
+            docker compose -f docker-compose.prod.yml ps
             
             # Wait and check health
             echo "Waiting for health check..."
