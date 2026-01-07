@@ -247,7 +247,9 @@ jobs:
             
             # Clone repo if first deploy, otherwise pull latest
             if [ ! -d ".git" ]; then
-              echo "First deploy - cloning repository..."
+              echo "First deploy - cleaning directory and cloning repository..."
+              # Remove any leftover files from failed deploys
+              rm -rf /home/ec2-user/app/* /home/ec2-user/app/.[!.]* 2>/dev/null || true
               git clone https://github.com/${{ github.repository }} .
             else
               echo "Pulling latest changes..."
