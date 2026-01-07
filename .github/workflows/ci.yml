@@ -229,8 +229,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
-            set -e
-            
             # Ensure Docker Buildx is installed FIRST
             echo "=== Step 1: Checking Docker Buildx ==="
             if ! docker buildx version > /dev/null 2>&1; then
@@ -275,10 +273,17 @@ jobs:
             docker compose -f docker-compose.prod.yml --env-file ../.env down || true
             
             echo "Building images (this may take a few minutes)..."
-            docker compose -f docker-compose.prod.yml --env-file ../.env build --no-cache --progress=plain 2>&1
+            if ! docker compose -f docker-compose.prod.yml --env-file ../.env build --no-cache --progress=plain; then
+              echo "ERROR: Docker build failed!"
+              exit 1
+            fi
             
             echo "Starting containers..."
-            docker compose -f docker-compose.prod.yml --env-file ../.env up -d
+            if ! docker compose -f docker-compose.prod.yml --env-file ../.env up -d; then
+              echo "ERROR: Docker up failed!"
+              docker compose -f docker-compose.prod.yml logs
+              exit 1
+            fi
             
             # Cleanup old images
             echo "Cleaning up old images..."
