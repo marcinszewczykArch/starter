@@ -5,12 +5,12 @@ aws_region    = "eu-central-1"
 environment   = "prod"
 app_name      = "starter"
 
-# EC2
-ec2_instance_type = "t3.small"
+# EC2 (t3.micro is Free Tier eligible - 750 hrs/month first year)
+ec2_instance_type = "t3.micro"
 ec2_key_name      = "your-key-pair-name"  # Must exist in AWS!
 
-# RDS
-db_instance_class = "db.t3.micro"
+# RDS (db.t4g.micro is Free Tier eligible)
+db_instance_class = "db.t4g.micro"
 db_name           = "starter"
 db_username       = "postgres"
 db_password       = "YourSecurePassword123!"  # Change this!

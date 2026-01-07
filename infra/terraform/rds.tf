@@ -14,9 +14,9 @@ resource "aws_db_instance" "main" {
 
   # Engine
   engine               = "postgres"
-  engine_version       = "16.3"
+  engine_version       = "17.6"
   instance_class       = var.db_instance_class
-  parameter_group_name = "default.postgres16"
+  parameter_group_name = "default.postgres17"
 
   # Storage
   allocated_storage     = 20

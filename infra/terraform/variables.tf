@@ -18,9 +18,9 @@ variable "app_name" {
 
 # EC2
 variable "ec2_instance_type" {
-  description = "EC2 instance type"
+  description = "EC2 instance type (t3.micro is Free Tier eligible)"
   type        = string
-  default     = "t3.small"
+  default     = "t3.micro"
 }
 
 variable "ec2_key_name" {
@@ -30,9 +30,9 @@ variable "ec2_key_name" {
 
 # RDS
 variable "db_instance_class" {
-  description = "RDS instance class"
+  description = "RDS instance class (db.t4g.micro is Free Tier eligible)"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t4g.micro"
 }
 
 variable "db_name" {

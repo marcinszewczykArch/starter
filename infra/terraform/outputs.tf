@@ -9,13 +9,18 @@ output "ec2_instance_id" {
 }
 
 output "rds_endpoint" {
-  description = "RDS endpoint"
+  description = "RDS endpoint (host:port)"
   value       = aws_db_instance.main.endpoint
 }
 
 output "rds_hostname" {
-  description = "RDS hostname (without port)"
+  description = "RDS hostname (without port, for DBeaver)"
   value       = aws_db_instance.main.address
+}
+
+output "rds_identifier" {
+  description = "RDS instance identifier"
+  value       = aws_db_instance.main.identifier
 }
 
 output "db_connection_string" {
