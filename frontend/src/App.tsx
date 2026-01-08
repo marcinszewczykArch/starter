@@ -41,7 +41,7 @@ function App() {
               <span className="version-badge">v0.0.1</span>
             </div>
             <nav className="nav">
-              <a href="/swagger-ui.html" target="_blank" rel="noopener noreferrer">
+              <a href="/swagger-ui/index.html" target="_blank" rel="noopener noreferrer">
                 API Docs
               </a>
               <a href="/actuator/health" target="_blank" rel="noopener noreferrer">
