@@ -1,4 +1,4 @@
-import { BACKEND_URL } from './config';
+import { API_BASE_URL } from './config';
 
 export interface MetricMeasurement {
   statistic: string;
@@ -29,7 +29,7 @@ export interface SystemMetrics {
 
 async function fetchMetric(name: string): Promise<MetricResponse | null> {
   try {
-    const response = await fetch(`${BACKEND_URL}/actuator/metrics/${name}`);
+    const response = await fetch(`${API_BASE_URL}/actuator/metrics/${name}`);
     if (!response.ok) return null;
     return response.json();
   } catch {
