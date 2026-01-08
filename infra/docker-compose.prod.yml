@@ -1,8 +1,9 @@
+# Production Docker Compose - uses pre-built images from GitHub Container Registry
+# Images are built and pushed by GitHub Actions pipeline
+
 services:
   backend:
-    build:
-      context: ..
-      dockerfile: infra/Dockerfile.backend
+    image: ${BACKEND_IMAGE:-ghcr.io/starter/backend:latest}
     container_name: starter-backend
     environment:
       - SPRING_PROFILES_ACTIVE=prod
@@ -24,9 +25,7 @@ services:
       - app-network
 
   frontend:
-    build:
-      context: ..
-      dockerfile: infra/Dockerfile.frontend
+    image: ${FRONTEND_IMAGE:-ghcr.io/starter/frontend:latest}
     container_name: starter-frontend
     ports:
       - "80:80"
@@ -40,4 +39,3 @@ services:
 networks:
   app-network:
     driver: bridge
-

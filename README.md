@@ -207,6 +207,7 @@ npm run test
 
 ### Infrastructure
 - Docker & Docker Compose
+- GitHub Container Registry (ghcr.io)
 - Nginx
 - GitHub Actions
 - Terraform (AWS EC2 + RDS)
@@ -214,6 +215,15 @@ npm run test
 ## 🚀 Production Deployment
 
 Deploy to AWS EC2 + RDS with automatic CI/CD from GitHub Actions.
+
+### How it works
+
+1. **Push to master** triggers GitHub Actions
+2. **CI builds Docker images** and pushes to GitHub Container Registry (`ghcr.io`)
+3. **Deploy job SSHs to EC2** and pulls the pre-built images
+4. **Docker Compose starts** the application
+
+No code cloning or building on EC2 - just pull and run!
 
 ### Prerequisites
 
@@ -313,10 +323,10 @@ git push origin master
 ```
 
 GitHub Actions will automatically:
-1. Run tests
-2. SSH to EC2
-3. Pull code & build Docker images
-4. Start the application
+1. Lint code
+2. Run tests
+3. Build Docker images and push to `ghcr.io`
+4. SSH to EC2, pull images, start containers
 
 ---
 

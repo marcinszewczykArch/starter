@@ -1,4 +1,4 @@
-# EC2 Instance
+# EC2 Instance - runs Docker containers pulled from GitHub Container Registry
 resource "aws_instance" "app" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = var.ec2_instance_type
@@ -10,6 +10,8 @@ resource "aws_instance" "app" {
     volume_type = "gp3"
   }
 
+  # Minimal setup - only Docker and Docker Compose needed
+  # Images are pre-built and pulled from ghcr.io
   user_data = <<-EOF
     #!/bin/bash
     set -e
@@ -17,8 +19,8 @@ resource "aws_instance" "app" {
     # Update system
     yum update -y
 
-    # Install Docker (official method for Amazon Linux 2023)
-    yum install -y docker git
+    # Install Docker
+    yum install -y docker
     systemctl start docker
     systemctl enable docker
     usermod -aG docker ec2-user
@@ -28,21 +30,9 @@ resource "aws_instance" "app" {
     curl -SL "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-x86_64" -o /usr/local/lib/docker/cli-plugins/docker-compose
     chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
-    # Also install as standalone for compatibility
-    cp /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
-
-    # Install Docker Buildx
-    BUILDX_VERSION=$(curl -s https://api.github.com/repos/docker/buildx/releases/latest | grep '"tag_name"' | cut -d'"' -f4)
-    curl -SL "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-amd64" -o /usr/local/lib/docker/cli-plugins/docker-buildx
-    chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
-    
-    # Setup buildx
-    docker buildx install
-
-    # Create app directory
-    mkdir -p /home/ec2-user/app
-    chown ec2-user:ec2-user /home/ec2-user/app
+    # Create deployment directory
+    mkdir -p /home/ec2-user/deploy
+    chown ec2-user:ec2-user /home/ec2-user/deploy
 
     # Signal that setup is complete
     touch /home/ec2-user/.setup-complete
@@ -62,4 +52,3 @@ resource "aws_eip" "app" {
     Name = "${var.app_name}-eip"
   }
 }
-
