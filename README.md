@@ -42,19 +42,15 @@ starter/
 │       ├── components/         # React components
 │       └── test/               # Test files
 ├── infra/                      # Infrastructure files
-│   ├── docker-compose.yml      # Full stack compose
 │   ├── docker-compose.dev.yml  # Dev database (port 5432)
 │   ├── docker-compose.test.yml # Test database (port 5433)
-│   ├── docker-compose.prod.yml # Production compose
-│   ├── Dockerfile.backend
-│   ├── Dockerfile.frontend
-│   ├── nginx.conf
-│   ├── nginx.prod.conf
+│   ├── Dockerfile.backend      # Backend Docker image (used by CI)
+│   ├── Dockerfile.frontend     # Frontend Docker image (used by CI)
+│   ├── nginx.conf              # Nginx config (local)
+│   ├── nginx.prod.conf         # Nginx config (production)
 │   └── terraform/              # AWS infrastructure (EC2 + RDS)
 ├── scripts/                    # Utility scripts
 │   ├── dev.sh                  # Start dev environment
-│   ├── build.sh                # Build all
-│   ├── up.sh                   # Start Docker stack
 │   └── test.sh                 # Run all tests
 ├── requests/                   # HTTP client requests (IntelliJ)
 ├── config/                     # Shared config
@@ -74,9 +70,6 @@ starter/
 
 # Run all tests
 ./scripts/test.sh
-
-# Build everything
-./scripts/build.sh
 ```
 
 ### Backend
@@ -128,11 +121,9 @@ docker compose -f infra/docker-compose.dev.yml up -d
 # Start test database (port 5433)
 docker compose -f infra/docker-compose.test.yml up -d
 
-# Start full stack (PostgreSQL + Backend + Frontend)
-./scripts/up.sh
-
-# Stop all containers
-docker compose -f infra/docker-compose.yml down
+# Stop containers
+docker compose -f infra/docker-compose.dev.yml down
+docker compose -f infra/docker-compose.test.yml down
 ```
 
 ## 🧪 Testing
