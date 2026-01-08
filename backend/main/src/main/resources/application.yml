@@ -26,6 +26,10 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+    use-root-path: true
+  servers:
+    - url: /
+      description: Current server
 
 app:
   cors:
