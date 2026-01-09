@@ -239,8 +239,20 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Set lowercase owner name
         run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
+      - name: Copy docker-compose to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "infra/docker-compose.prod.yml"
+          target: "/home/ec2-user/deploy"
+          strip_components: 1
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -250,20 +262,16 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script_stop: true
           script: |
-            echo "=== Step 1: Setup deployment directory ==="
-            # Clean old deployment directory and create new one
-            rm -rf /home/ec2-user/app 2>/dev/null || true
-            mkdir -p /home/ec2-user/deploy
+            echo "=== Step 1: Setup ==="
             cd /home/ec2-user/deploy
+            mv docker-compose.prod.yml docker-compose.yml
             
-            echo "=== Step 2: Pull Docker images from registry ==="
-            # Pull latest images from GitHub Container Registry (public, no login needed)
+            echo "=== Step 2: Pull Docker images ==="
             docker pull ghcr.io/${{ env.OWNER_LC }}/starter-backend:${{ github.sha }}
             docker pull ghcr.io/${{ env.OWNER_LC }}/starter-frontend:${{ github.sha }}
             
-            echo "=== Step 3: Create configuration files ==="
-            # Create .env file with secrets (DB runs locally in Docker)
-            cat > .env << EOF
+            echo "=== Step 3: Create .env ==="
+            cat > .env << 'EOF'
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             SWAGGER_USER=${{ secrets.SWAGGER_USER }}
@@ -272,92 +280,20 @@ jobs:
             FRONTEND_IMAGE=ghcr.io/${{ env.OWNER_LC }}/starter-frontend:${{ github.sha }}
             EOF
             
-            # Create docker-compose.yml with PostgreSQL running locally
-            printf '%s\n' \
-              'services:' \
-              '  db:' \
-              '    image: postgres:17-alpine' \
-              '    container_name: starter-db' \
-              '    environment:' \
-              '      - POSTGRES_DB=starter' \
-              '      - POSTGRES_USER=${DB_USER}' \
-              '      - POSTGRES_PASSWORD=${DB_PASSWORD}' \
-              '    volumes:' \
-              '      - postgres_data:/var/lib/postgresql/data' \
-              '    networks:' \
-              '      - app-network' \
-              '    restart: always' \
-              '    healthcheck:' \
-              '      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]' \
-              '      interval: 10s' \
-              '      timeout: 5s' \
-              '      retries: 5' \
-              '  backend:' \
-              '    image: ${BACKEND_IMAGE}' \
-              '    container_name: starter-backend' \
-              '    environment:' \
-              '      - SPRING_PROFILES_ACTIVE=prod' \
-              '      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/starter' \
-              '      - SPRING_DATASOURCE_USERNAME=${DB_USER}' \
-              '      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}' \
-              '      - SWAGGER_USER=${SWAGGER_USER:-admin}' \
-              '      - SWAGGER_PASSWORD=${SWAGGER_PASSWORD}' \
-              '    expose:' \
-              '      - "8080"' \
-              '    depends_on:' \
-              '      db:' \
-              '        condition: service_healthy' \
-              '    restart: always' \
-              '    healthcheck:' \
-              '      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]' \
-              '      interval: 30s' \
-              '      timeout: 10s' \
-              '      retries: 3' \
-              '      start_period: 60s' \
-              '    networks:' \
-              '      - app-network' \
-              '  frontend:' \
-              '    image: ${FRONTEND_IMAGE}' \
-              '    container_name: starter-frontend' \
-              '    ports:' \
-              '      - "80:80"' \
-              '    depends_on:' \
-              '      backend:' \
-              '        condition: service_healthy' \
-              '    restart: always' \
-              '    networks:' \
-              '      - app-network' \
-              'volumes:' \
-              '  postgres_data:' \
-              'networks:' \
-              '  app-network:' \
-              '    driver: bridge' \
-              > docker-compose.yml
-            
             echo "=== Step 4: Start containers ==="
-            # Stop old containers if running (preserve database volume)
             docker compose down 2>/dev/null || true
-            
-            # Start new containers
             docker compose up -d
-            
-            # Cleanup old images
-            echo "Cleaning up old images..."
             docker image prune -f
             
-            echo "=== Step 5: Verify deployment ==="
-            # Show running containers
+            echo "=== Step 5: Verify ==="
             docker compose ps
-            
-            # Wait for health check (longer to allow DB init + backend start)
-            echo "Waiting for application to start (90 seconds)..."
+            echo "Waiting 90s for startup..."
             sleep 90
             
-            # Check health
             if curl -sf http://localhost/actuator/health; then
-              echo ""
-              echo "=== Deployment successful! ==="
+              echo -e "\n=== Deployment successful! ==="
             else
-              echo "Health check failed - check logs with: docker compose logs"
+              echo "Health check failed"
+              docker compose logs --tail=50
               exit 1
             fi
