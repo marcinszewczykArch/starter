@@ -271,12 +271,13 @@ jobs:
             docker pull ghcr.io/${{ env.OWNER_LC }}/starter-frontend:${{ github.sha }}
             
             echo "=== Step 3: Create .env ==="
-            cat > .env << 'EOF'
+            cat > .env << EOF
             DB_USER=${{ secrets.DB_USER }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             SWAGGER_USER=${{ secrets.SWAGGER_USER }}
             SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
             GRAFANA_PASSWORD=${{ secrets.GRAFANA_PASSWORD }}
+            GRAFANA_ROOT_URL=http://${{ secrets.EC2_HOST }}/grafana
             BACKEND_IMAGE=ghcr.io/${{ env.OWNER_LC }}/starter-backend:${{ github.sha }}
             FRONTEND_IMAGE=ghcr.io/${{ env.OWNER_LC }}/starter-frontend:${{ github.sha }}
             EOF
