@@ -18,9 +18,15 @@ variable "app_name" {
 
 # EC2
 variable "ec2_instance_type" {
-  description = "EC2 instance type (t3.micro is Free Tier eligible)"
+  description = "EC2 instance type"
   type        = string
-  default     = "t3.micro"
+  default     = "t3.small"  # 2GB RAM, Spot pricing ~$4.50/month
+}
+
+variable "ec2_spot_max_price" {
+  description = "Maximum hourly price for Spot instance (On-Demand t3.small = $0.0208)"
+  type        = string
+  default     = "0.015"  # ~70% of On-Demand price
 }
 
 variable "ec2_key_name" {

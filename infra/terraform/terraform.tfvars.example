@@ -5,9 +5,10 @@ aws_region    = "eu-central-1"
 environment   = "prod"
 app_name      = "starter"
 
-# EC2 (t3.micro is Free Tier eligible - 750 hrs/month first year)
-ec2_instance_type = "t3.micro"
-ec2_key_name      = "your-key-pair-name"  # Must exist in AWS!
+# EC2 Spot Instance (t3.small = 2GB RAM, ~$4.50/month with Spot)
+ec2_instance_type  = "t3.small"
+ec2_spot_max_price = "0.015"    # Max price per hour (On-Demand = $0.0208)
+ec2_key_name       = "your-key-pair-name"  # Must exist in AWS!
 
 # RDS (db.t4g.micro is Free Tier eligible)
 db_instance_class = "db.t4g.micro"
