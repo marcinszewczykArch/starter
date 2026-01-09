@@ -82,7 +82,6 @@ services:
     container_name: starter-loki
     volumes:
       - loki_data:/loki
-    command: -config.expand-env=true
     networks:
       - app-network
     restart: always
