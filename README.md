@@ -44,11 +44,12 @@ starter/
 ├── infra/                      # Infrastructure files
 │   ├── docker-compose.dev.yml  # Dev database (port 5432)
 │   ├── docker-compose.test.yml # Test database (port 5433)
+│   ├── docker-compose.prod.yml # Production (EC2)
 │   ├── Dockerfile.backend      # Backend Docker image (used by CI)
 │   ├── Dockerfile.frontend     # Frontend Docker image (used by CI)
 │   ├── nginx.conf              # Nginx config (local)
 │   ├── nginx.prod.conf         # Nginx config (production)
-│   └── terraform/              # AWS infrastructure (EC2 + RDS)
+│   └── terraform/              # AWS infrastructure (EC2 Spot)
 ├── scripts/                    # Utility scripts
 │   ├── dev.sh                  # Start dev environment
 │   └── test.sh                 # Run all tests
@@ -158,7 +159,7 @@ npm run test
 
 - `local` - Local development (PostgreSQL on port 5432)
 - `test` - Testing (PostgreSQL on port 5433)
-- `prod` - Production (RDS, Swagger protected with Basic Auth)
+- `prod` - Production (PostgreSQL in Docker, Swagger protected with Basic Auth)
 
 ### Environment Variables
 
@@ -183,7 +184,7 @@ npm run test
 - Java 21
 - Spring Boot 3.2
 - Spring JDBC (JdbcClient)
-- PostgreSQL 16
+- PostgreSQL 17
 - Flyway
 - SpringDoc OpenAPI (Swagger)
 - Spotless + Error Prone + NullAway
@@ -201,11 +202,12 @@ npm run test
 - GitHub Container Registry (ghcr.io)
 - Nginx
 - GitHub Actions
-- Terraform (AWS EC2 + RDS)
+- Terraform (AWS EC2 Spot)
 
 ## 🚀 Production Deployment
 
-Deploy to AWS EC2 + RDS with automatic CI/CD from GitHub Actions.
+Deploy to AWS EC2 (Spot instance) with automatic CI/CD from GitHub Actions.
+PostgreSQL runs in Docker on EC2 (no RDS needed - saves ~$11/month).
 
 ### How it works
 
@@ -250,15 +252,10 @@ aws_region    = "eu-central-1"
 environment   = "prod"
 app_name      = "starter"
 
-# EC2
-ec2_instance_type = "t3.small"
-ec2_key_name      = "starter-key"        # Name from Step 1
-
-# RDS
-db_instance_class = "db.t3.micro"        # Free tier eligible
-db_name           = "starter"
-db_username       = "postgres"
-db_password       = "YourSecurePass123!" # Change this!
+# EC2 Spot Instance (t3.small = 2GB RAM, ~$4.50/month with Spot!)
+ec2_instance_type  = "t3.small"
+ec2_spot_max_price = "0.015"             # Max hourly price
+ec2_key_name       = "starter-key"       # Name from Step 1
 
 # Security - your public IP (find it: curl ifconfig.me)
 allowed_ssh_cidr = "123.45.67.89/32"
@@ -272,10 +269,9 @@ terraform plan      # Review changes
 terraform apply     # Create resources (type 'yes')
 ```
 
-Save the outputs:
+Save the output:
 ```
-ec2_public_ip      = "12.34.56.78"
-db_connection_string = "jdbc:postgresql://xxx.rds.amazonaws.com:5432/starter"
+ec2_public_ip = "12.34.56.78"
 ```
 
 ---
@@ -286,16 +282,15 @@ Go to **GitHub → Your Repo → Settings → Secrets and variables → Actions*
 
 Click **New repository secret** for each:
 
-| Secret Name | Value | Where to get it |
-|-------------|-------|-----------------|
+| Secret Name | Value | Description |
+|-------------|-------|-------------|
 | `EC2_HOST` | `12.34.56.78` | Terraform output: `ec2_public_ip` |
 | `EC2_USER` | `ec2-user` | Always this value |
-| `EC2_SSH_KEY` | Contents of `.pem` file | `cat starter-key.pem` (copy ALL including headers) |
-| `DB_URL` | `jdbc:postgresql://xxx.rds.amazonaws.com:5432/starter` | Terraform output: `db_connection_string` |
-| `DB_USER` | `postgres` | Same as `db_username` in tfvars |
-| `DB_PASSWORD` | `YourSecurePass123!` | Same as `db_password` in tfvars |
-| `SWAGGER_USER` | `admin` | Any username you want |
-| `SWAGGER_PASSWORD` | `SwaggerSecret123!` | Any password you want |
+| `EC2_SSH_KEY` | Contents of `.pem` file | `cat starter-key.pem` |
+| `DB_USER` | `postgres` | Database username |
+| `DB_PASSWORD` | `YourSecurePass123!` | Database password |
+| `SWAGGER_USER` | `admin` | Swagger UI username |
+| `SWAGGER_PASSWORD` | `SwaggerSecret123!` | Swagger UI password |
 
 **⚠️ For `EC2_SSH_KEY`**: Copy the ENTIRE file content including:
 ```
@@ -304,6 +299,8 @@ MIIEpAIBAAKCAQEA...
 ...
 -----END RSA PRIVATE KEY-----
 ```
+
+> **Note**: No `DB_URL` needed - PostgreSQL runs locally in Docker on EC2.
 
 ---
 
@@ -337,7 +334,7 @@ Swagger requires login with `SWAGGER_USER` / `SWAGGER_PASSWORD`.
 
 ### Connecting to Database (DBeaver)
 
-Use SSH Tunnel:
+Database runs in Docker on EC2. Use SSH Tunnel:
 
 1. **DBeaver → New Connection → PostgreSQL**
 2. **SSH Tab:**
@@ -346,10 +343,10 @@ Use SSH Tunnel:
    - User: `ec2-user`
    - Auth: Private Key → select `.pem` file
 3. **Main Tab:**
-   - Host: `xxx.rds.amazonaws.com` (RDS endpoint without port)
+   - Host: `localhost`
    - Port: `5432`
    - Database: `starter`
-   - User/Password: from tfvars
+   - User/Password: from GitHub Secrets
 
 ---
 
@@ -357,10 +354,13 @@ Use SSH Tunnel:
 
 | Resource | Monthly Cost |
 |----------|--------------|
-| EC2 t3.small | ~$15 |
-| RDS db.t3.micro | $0 (Free Tier) or ~$15 |
-| Elastic IP | $0 (when attached) |
-| **Total** | **~$15-30/month** |
+| EC2 t3.small Spot | ~$4.50 |
+| EBS 30GB | ~$2.50 |
+| Elastic IP | ~$3.60 |
+| Data transfer | ~$1 |
+| **Total** | **~$12/month** |
+
+> 💡 Using Spot instances saves ~70% compared to On-Demand!
 
 ---
 
