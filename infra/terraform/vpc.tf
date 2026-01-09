@@ -56,23 +56,4 @@ resource "aws_security_group" "ec2" {
   }
 }
 
-# Security Group for RDS
-resource "aws_security_group" "rds" {
-  name        = "${var.app_name}-rds-sg"
-  description = "Security group for RDS instance"
-  vpc_id      = data.aws_vpc.default.id
-
-  # PostgreSQL from EC2 only
-  ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ec2.id]
-    description     = "PostgreSQL from EC2"
-  }
-
-  tags = {
-    Name = "${var.app_name}-rds-sg"
-  }
-}
 

@@ -10,12 +10,11 @@ ec2_instance_type  = "t3.small"
 ec2_spot_max_price = "0.015"    # Max price per hour (On-Demand = $0.0208)
 ec2_key_name       = "your-key-pair-name"  # Must exist in AWS!
 
-# RDS (db.t4g.micro is Free Tier eligible)
-db_instance_class = "db.t4g.micro"
-db_name           = "starter"
-db_username       = "postgres"
-db_password       = "YourSecurePassword123!"  # Change this!
-
 # Security - restrict SSH to your IP
 allowed_ssh_cidr = "1.2.3.4/32"  # Your public IP
+
+# Note: PostgreSQL runs in Docker on EC2 (no RDS needed)
+# Database credentials are managed via GitHub Secrets:
+#   - DB_USER (default: postgres)
+#   - DB_PASSWORD (your secure password)
 
