@@ -215,7 +215,7 @@ npm run test
 graph TB
     subgraph EC2["☁️ AWS EC2 (t3.small Spot)"]
         subgraph App["Application"]
-            FE[🌐 Frontend<br/>Nginx :80]
+            FE[🌐 Frontend<br/>Nginx :80/:443]
             BE[☕ Backend<br/>Spring Boot :8080]
             DB[(🐘 PostgreSQL<br/>:5432)]
         end
@@ -235,7 +235,7 @@ graph TB
         LO --> GR
     end
     
-    U[👤 User] -->|HTTP :80| FE
+    U[👤 User] -->|HTTPS :443| FE
     U -->|/grafana| GR
 ```
 
@@ -368,6 +368,85 @@ Swagger requires login with `SWAGGER_USER` / `SWAGGER_PASSWORD`.
 
 ---
 
+### Step 6: Configure HTTPS (Optional)
+
+If you have a domain, set up free SSL with Let's Encrypt.
+
+#### 6.1 Configure DNS
+
+Add A records pointing to your EC2 IP:
+```
+Type: A    Name: @      Value: 12.34.56.78
+Type: A    Name: www    Value: 12.34.56.78
+```
+
+Wait 5-10 minutes for DNS propagation.
+
+#### 6.2 Get SSL Certificate
+
+```bash
+# Connect to EC2
+ssh -i ~/.ssh/starter-key.pem ec2-user@12.34.56.78
+
+# Install certbot
+sudo yum install -y certbot
+
+# Stop frontend (port 80 must be free)
+cd /home/ec2-user/deploy
+docker compose stop frontend
+
+# Get certificate (replace with your domain and email!)
+sudo certbot certonly --standalone \
+  -d yourdomain.com -d www.yourdomain.com \
+  --non-interactive --agree-tos \
+  -m your-email@example.com
+
+# Start frontend
+docker compose start frontend
+```
+
+#### 6.3 Update nginx.prod.conf
+
+Update `infra/nginx.prod.conf` with your domain:
+```nginx
+ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+```
+
+Commit, push, and redeploy.
+
+#### 6.4 Setup Auto-Renewal
+
+Certificates expire after 90 days. Setup automatic renewal:
+
+```bash
+# On EC2:
+sudo yum install -y cronie
+sudo systemctl enable crond
+sudo systemctl start crond
+
+# Add cron job
+sudo crontab -e
+```
+
+Add this line:
+```
+0 3 * * * certbot renew --quiet && docker exec starter-frontend nginx -s reload
+```
+
+This checks daily at 3 AM and renews if needed.
+
+#### 6.5 Verify HTTPS
+
+```bash
+# Check certificate dates
+sudo openssl x509 -in /etc/letsencrypt/live/yourdomain.com/fullchain.pem -noout -dates
+```
+
+Visit `https://yourdomain.com` - you should see 🔒 in the browser!
+
+---
+
 ### Connecting to Database (DBeaver)
 
 Database runs in Docker on EC2. Use SSH Tunnel:
@@ -405,7 +484,7 @@ Built-in monitoring stack with Prometheus, Grafana, and Loki.
 ### Access Grafana
 
 ```
-URL: http://EC2_IP/grafana
+URL: https://yourdomain.com/grafana (or http://EC2_IP/grafana without HTTPS)
 User: admin
 Password: (GRAFANA_PASSWORD from GitHub Secrets)
 ```
