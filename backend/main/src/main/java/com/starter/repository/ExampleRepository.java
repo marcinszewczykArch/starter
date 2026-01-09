@@ -9,6 +9,7 @@ import com.starter.domain.Example;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.List;
 
@@ -46,8 +47,8 @@ public class ExampleRepository {
                 .param("name", example.getName())
                 .param("description", example.getDescription())
                 .param("active", example.isActive())
-                .param("createdAt", now)
-                .param("updatedAt", now)
+                .param("createdAt", Timestamp.from(now))
+                .param("updatedAt", Timestamp.from(now))
                 .query(Long.class)
                 .single();
 
