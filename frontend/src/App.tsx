@@ -69,6 +69,15 @@ function App() {
             <a href="/swagger-ui/index.html" className="text-sm text-gray-600 hover:text-gray-900">
               API Docs
             </a>
+            <a href="/grafana" className="text-sm text-gray-600 hover:text-gray-900">
+              Grafana
+            </a>
+            <a
+              href="/grafana/explore?orgId=1&left=%7B%22datasource%22:%22Loki%22%7D"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Logs
+            </a>
             <a href="/actuator/health" className="text-sm text-gray-600 hover:text-gray-900">
               Health
             </a>

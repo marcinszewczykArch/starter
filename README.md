@@ -49,6 +49,10 @@ starter/
 │   ├── Dockerfile.frontend     # Frontend Docker image (used by CI)
 │   ├── nginx.conf              # Nginx config (local)
 │   ├── nginx.prod.conf         # Nginx config (production)
+│   ├── monitoring/             # Monitoring stack config
+│   │   ├── prometheus.yml      # Prometheus scrape config
+│   │   ├── promtail.yml        # Log collection config
+│   │   └── grafana/            # Grafana provisioning
 │   └── terraform/              # AWS infrastructure (EC2 Spot)
 ├── scripts/                    # Utility scripts
 │   ├── dev.sh                  # Start dev environment
@@ -203,6 +207,37 @@ npm run test
 - Nginx
 - GitHub Actions
 - Terraform (AWS EC2 Spot)
+- Prometheus + Grafana + Loki (monitoring)
+
+## 🏗️ Production Architecture
+
+```mermaid
+graph TB
+    subgraph EC2["☁️ AWS EC2 (t3.small Spot)"]
+        subgraph App["Application"]
+            FE[🌐 Frontend<br/>Nginx :80]
+            BE[☕ Backend<br/>Spring Boot :8080]
+            DB[(🐘 PostgreSQL<br/>:5432)]
+        end
+        
+        subgraph Mon["Monitoring"]
+            PR[📊 Prometheus<br/>metrics]
+            GR[📈 Grafana<br/>dashboards]
+            LO[📝 Loki<br/>logs]
+            PT[📋 Promtail<br/>collector]
+        end
+        
+        FE -->|/api/*| BE
+        BE --> DB
+        BE -->|/actuator/prometheus| PR
+        PR --> GR
+        PT -->|container logs| LO
+        LO --> GR
+    end
+    
+    U[👤 User] -->|HTTP :80| FE
+    U -->|/grafana| GR
+```
 
 ## 🚀 Production Deployment
 
@@ -214,7 +249,7 @@ PostgreSQL runs in Docker on EC2 (no RDS needed - saves ~$11/month).
 1. **Push to master** triggers GitHub Actions
 2. **CI builds Docker images** and pushes to GitHub Container Registry (`ghcr.io`)
 3. **Deploy job SSHs to EC2** and pulls the pre-built images
-4. **Docker Compose starts** the application
+4. **Docker Compose starts** the application + monitoring stack
 
 No code cloning or building on EC2 - just pull and run!
 
@@ -291,6 +326,7 @@ Click **New repository secret** for each:
 | `DB_PASSWORD` | `YourSecurePass123!` | Database password |
 | `SWAGGER_USER` | `admin` | Swagger UI username |
 | `SWAGGER_PASSWORD` | `SwaggerSecret123!` | Swagger UI password |
+| `GRAFANA_PASSWORD` | `GrafanaSecret123!` | Grafana admin password |
 
 **⚠️ For `EC2_SSH_KEY`**: Copy the ENTIRE file content including:
 ```
@@ -361,6 +397,41 @@ Database runs in Docker on EC2. Use SSH Tunnel:
 | **Total** | **~$12/month** |
 
 > 💡 Using Spot instances saves ~70% compared to On-Demand!
+
+## 📊 Monitoring
+
+Built-in monitoring stack with Prometheus, Grafana, and Loki.
+
+### Access Grafana
+
+```
+URL: http://EC2_IP/grafana
+User: admin
+Password: (GRAFANA_PASSWORD from GitHub Secrets)
+```
+
+### What's included
+
+| Tool | Purpose | Access |
+|------|---------|--------|
+| **Grafana** | Dashboards & visualization | `/grafana` |
+| **Prometheus** | Metrics collection | Internal |
+| **Loki** | Log aggregation | Via Grafana |
+| **Promtail** | Log collection | Internal |
+
+### Available Metrics
+
+- **JVM**: Memory, GC, Threads
+- **HTTP**: Requests/sec, latency, error rate
+- **Database**: Connection pool, query time
+- **System**: CPU, disk usage
+
+### Viewing Logs
+
+1. Open Grafana → **Explore**
+2. Select **Loki** datasource
+3. Query: `{job="containerlogs"}`
+4. Filter by container: `{container_id=~".*backend.*"}`
 
 ---
 

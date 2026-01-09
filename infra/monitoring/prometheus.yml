@@ -1,0 +1,21 @@
+# Prometheus configuration
+# Scrapes metrics from backend's /actuator/prometheus endpoint
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Backend application metrics
+  - job_name: 'backend'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['backend:8080']
+        labels:
+          application: 'starter'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+

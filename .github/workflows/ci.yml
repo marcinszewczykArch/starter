@@ -244,13 +244,13 @@ jobs:
       - name: Set lowercase owner name
         run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
-      - name: Copy docker-compose to EC2
+      - name: Copy files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "infra/docker-compose.prod.yml"
+          source: "infra/docker-compose.prod.yml,infra/monitoring"
           target: "/home/ec2-user/deploy"
           strip_components: 1
 
@@ -276,6 +276,7 @@ jobs:
             DB_PASSWORD=${{ secrets.DB_PASSWORD }}
             SWAGGER_USER=${{ secrets.SWAGGER_USER }}
             SWAGGER_PASSWORD=${{ secrets.SWAGGER_PASSWORD }}
+            GRAFANA_PASSWORD=${{ secrets.GRAFANA_PASSWORD }}
             BACKEND_IMAGE=ghcr.io/${{ env.OWNER_LC }}/starter-backend:${{ github.sha }}
             FRONTEND_IMAGE=ghcr.io/${{ env.OWNER_LC }}/starter-frontend:${{ github.sha }}
             EOF

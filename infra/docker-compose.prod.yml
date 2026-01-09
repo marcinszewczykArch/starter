@@ -1,7 +1,10 @@
 # Production Docker Compose - runs on EC2
-# Database runs locally in Docker (no RDS needed)
+# Includes: PostgreSQL, Backend, Frontend, and Monitoring stack
 
 services:
+  # =============================================================================
+  # APPLICATION
+  # =============================================================================
   db:
     image: postgres:17-alpine
     container_name: starter-db
@@ -57,10 +60,71 @@ services:
       - app-network
     restart: always
 
+  # =============================================================================
+  # MONITORING
+  # =============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: starter-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+    networks:
+      - app-network
+    restart: always
+
+  loki:
+    image: grafana/loki:latest
+    container_name: starter-loki
+    volumes:
+      - loki_data:/loki
+    command: -config.expand-env=true
+    networks:
+      - app-network
+    restart: always
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: starter-promtail
+    volumes:
+      - ./monitoring/promtail.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - app-network
+    restart: always
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: starter-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    volumes:
+      - ./monitoring/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - app-network
+    restart: always
+
 volumes:
   postgres_data:
+  prometheus_data:
+  loki_data:
+  grafana_data:
 
 networks:
   app-network:
     driver: bridge
-
