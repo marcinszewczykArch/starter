@@ -14,6 +14,12 @@ That's it! The application will be available at:
 - **Backend**: http://localhost:8080
 - **Swagger UI**: http://localhost:8080/swagger-ui.html
 
+**Test Users** (created automatically):
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@starter.com` | `password123` | ADMIN |
+| `user@starter.com` | `password123` | USER |
+
 ## 📋 Requirements
 
 - **Java 21** - [Download](https://adoptium.net/)
@@ -30,16 +36,21 @@ starter/
 │       │   └── com/starter/
 │       │       ├── config/     # Configuration classes
 │       │       ├── controller/ # REST controllers
-│       │       ├── domain/     # Domain entities
+│       │       ├── domain/     # Domain entities (User, Example)
 │       │       ├── dto/        # Data Transfer Objects
+│       │       ├── exception/  # Custom exceptions
 │       │       ├── repository/ # Database repositories
+│       │       ├── security/   # JWT, filters, UserPrincipal
 │       │       └── service/    # Business logic
 │       └── src/main/resources/
 │           └── db/migration/   # Flyway migrations
 ├── frontend/                   # React/Vite frontend
 │   └── src/
-│       ├── api/                # API client
-│       ├── components/         # React components
+│       ├── api/                # API client + auth API
+│       ├── components/         # Shared components (Header, etc.)
+│       ├── context/            # React Context (AuthContext)
+│       ├── pages/              # Page components (Dashboard, Login, etc.)
+│       ├── utils/              # Utility functions
 │       └── test/               # Test files
 ├── infra/                      # Infrastructure files
 │   ├── docker-compose.dev.yml  # Dev database (port 5432)
@@ -157,6 +168,122 @@ cd frontend
 npm run test
 ```
 
+## 🔐 Authentication
+
+The application uses **JWT (JSON Web Tokens)** for authentication with role-based access control.
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant DB as Database
+
+    Note over U,DB: Registration
+    U->>F: Fill registration form
+    F->>B: POST /api/auth/register
+    B->>B: Validate email & password
+    B->>B: Hash password (BCrypt)
+    B->>DB: Save user
+    DB-->>B: User created
+    B->>B: Generate JWT token
+    B-->>F: {token, userId, email, role}
+    F->>F: Store token in localStorage
+    F-->>U: Redirect to Dashboard
+
+    Note over U,DB: Login
+    U->>F: Enter credentials
+    F->>B: POST /api/auth/login
+    B->>DB: Find user by email
+    B->>B: Verify password
+    B->>B: Generate JWT token
+    B-->>F: {token, userId, email, role}
+    F->>F: Store token in localStorage
+    F-->>U: Redirect to Dashboard
+
+    Note over U,DB: Authenticated Request
+    U->>F: View examples
+    F->>B: GET /api/examples<br/>Authorization: Bearer {token}
+    B->>B: Validate JWT signature
+    B->>B: Extract userId from token
+    B->>DB: Query (filtered by userId)
+    DB-->>B: User's examples
+    B-->>F: JSON response
+    F-->>U: Display data
+```
+
+### User Roles
+
+| Role | Permissions |
+|------|-------------|
+| `USER` | View/create own examples only |
+| `ADMIN` | View all examples, access Grafana/Logs links |
+
+### Default Test Users
+
+Two users are created automatically via database migration (`V4__seed_users.sql`):
+
+| Email | Password | Role |
+|-------|----------|------|
+| `admin@starter.com` | `password123` | ADMIN |
+| `user@starter.com` | `password123` | USER |
+
+> ⚠️ **Change these passwords in production!**
+
+### JWT Token Structure
+
+The JWT token contains:
+- `sub` (subject): User ID
+- `email`: User email
+- `role`: User role (USER/ADMIN)
+- `iat`: Issued at timestamp
+- `exp`: Expiration timestamp (default: 24 hours)
+
+### API Endpoints
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/auth/register` | POST | ❌ | Register new user |
+| `/api/auth/login` | POST | ❌ | Login and get token |
+| `/api/auth/me` | GET | ✅ | Get current user info |
+| `/api/examples` | GET | ✅ | List examples (filtered by user) |
+| `/api/examples` | POST | ✅ | Create new example |
+
+### Frontend Authentication
+
+The frontend uses React Context (`AuthContext`) to manage authentication state:
+
+```tsx
+// Use in any component
+const { user, isAuthenticated, isAdmin, login, logout } = useAuth();
+
+// Protected routes
+<ProtectedRoute>
+  <Dashboard />
+</ProtectedRoute>
+
+// Admin-only content
+<AdminOnly>
+  <Link to="/admin">Admin Panel</Link>
+</AdminOnly>
+```
+
+**Token handling:**
+- Token stored in `localStorage` as `auth_token`
+- Automatically included in API requests via `Authorization: Bearer` header
+- Auto-logout on 401 response (expired/invalid token)
+- Token verified on page load via `/api/auth/me`
+
+### Row-Level Security
+
+Examples are filtered based on the authenticated user:
+- **USER role**: Only sees examples where `user_id = current_user_id`
+- **ADMIN role**: Sees all examples in the system
+
+New examples are automatically assigned to the creating user.
+
 ## ⚙️ Configuration
 
 ### Backend Profiles
@@ -175,6 +302,10 @@ npm run test
 | `SPRING_DATASOURCE_URL` | - | Database URL |
 | `SPRING_DATASOURCE_USERNAME` | postgres | DB username |
 | `SPRING_DATASOURCE_PASSWORD` | postgres | DB password |
+| `JWT_SECRET` | (dev default) | JWT signing secret (min 32 chars) |
+| `JWT_EXPIRATION_MS` | 86400000 | Token expiration (24h default) |
+| `SWAGGER_USER` | admin | Swagger UI username (prod only) |
+| `SWAGGER_PASSWORD` | admin | Swagger UI password (prod only) |
 
 #### Frontend
 
@@ -187,6 +318,7 @@ npm run test
 ### Backend
 - Java 21
 - Spring Boot 3.2
+- Spring Security + JWT (jjwt)
 - Spring JDBC (JdbcClient)
 - PostgreSQL 17
 - Flyway
@@ -196,6 +328,8 @@ npm run test
 ### Frontend
 - React 18
 - TypeScript
+- React Router DOM
+- Tailwind CSS
 - Vite
 - Vitest
 - React Testing Library
@@ -324,6 +458,7 @@ Click **New repository secret** for each:
 | `EC2_SSH_KEY` | Contents of `.pem` file | `cat starter-key.pem` |
 | `DB_USER` | `postgres` | Database username |
 | `DB_PASSWORD` | `YourSecurePass123!` | Database password |
+| `JWT_SECRET` | `YourJWTSecretKey32CharsMinimum!` | JWT signing secret (min 32 chars) |
 | `SWAGGER_USER` | `admin` | Swagger UI username |
 | `SWAGGER_PASSWORD` | `SwaggerSecret123!` | Swagger UI password |
 | `GRAFANA_PASSWORD` | `GrafanaSecret123!` | Grafana admin password |

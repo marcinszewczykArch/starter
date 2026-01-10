@@ -38,9 +38,14 @@ fi
 
 echo -e "${GREEN}✅ All prerequisites met${NC}"
 
-# Start PostgreSQL
+# Stop and remove existing containers and volumes (fresh start)
 echo ""
-echo "🐘 Starting PostgreSQL..."
+echo "🧹 Cleaning up existing containers..."
+docker compose -f "$PROJECT_ROOT/infra/docker-compose.dev.yml" down -v 2>/dev/null || true
+
+# Start PostgreSQL (fresh database)
+echo ""
+echo "🐘 Starting PostgreSQL (fresh database on port 5432)..."
 docker compose -f "$PROJECT_ROOT/infra/docker-compose.dev.yml" up -d
 
 # Wait for PostgreSQL to be ready
@@ -62,13 +67,21 @@ fi
 echo ""
 echo "☕ Starting backend..."
 cd "$PROJECT_ROOT"
-SPRING_PROFILES_ACTIVE=local ./gradlew :backend:main:bootRun &
+SPRING_PROFILES_ACTIVE=local ./gradlew :backend:main:bootRun --no-daemon &
 BACKEND_PID=$!
 
 # Wait for backend to start
 echo "⏳ Waiting for backend to start..."
+MAX_WAIT=60
+COUNTER=0
 until curl -s http://localhost:8080/actuator/health >/dev/null 2>&1; do
     sleep 2
+    COUNTER=$((COUNTER + 2))
+    if [ $COUNTER -ge $MAX_WAIT ]; then
+        echo -e "${RED}❌ Backend failed to start within ${MAX_WAIT}s${NC}"
+        kill $BACKEND_PID 2>/dev/null || true
+        exit 1
+    fi
 done
 echo -e "${GREEN}✅ Backend is ready at http://localhost:8080${NC}"
 
@@ -79,6 +92,9 @@ cd "$PROJECT_ROOT/frontend"
 npm run dev &
 FRONTEND_PID=$!
 
+# Wait for frontend to start
+sleep 3
+
 echo ""
 echo -e "${GREEN}🎉 Development environment is ready!${NC}"
 echo ""
@@ -87,6 +103,10 @@ echo "   Frontend:    http://localhost:5173"
 echo "   Backend:     http://localhost:8080"
 echo "   Swagger UI:  http://localhost:8080/swagger-ui.html"
 echo "   Health:      http://localhost:8080/actuator/health"
+echo ""
+echo "👤 Test Users:"
+echo "   Admin:  admin@starter.com / password123"
+echo "   User:   user@starter.com / password123"
 echo ""
 echo "Press Ctrl+C to stop all services..."
 
@@ -103,6 +123,9 @@ cleanup() {
         kill $FRONTEND_PID 2>/dev/null || true
     fi
     
+    # Kill any remaining gradle processes
+    pkill -f "GradleDaemon" 2>/dev/null || true
+    
     docker compose -f "$PROJECT_ROOT/infra/docker-compose.dev.yml" down
     
     echo -e "${GREEN}✅ All services stopped${NC}"
@@ -113,4 +136,3 @@ trap cleanup SIGINT SIGTERM
 
 # Wait for processes
 wait
-

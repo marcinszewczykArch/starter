@@ -1,0 +1,60 @@
+import { API_BASE_URL } from './config';
+import type { AuthResponse, LoginRequest, RegisterRequest, User } from './types';
+
+const AUTH_URL = `${API_BASE_URL}/api/auth`;
+
+class AuthApi {
+  async login(request: LoginRequest): Promise<AuthResponse> {
+    const response = await fetch(`${AUTH_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Login failed' }));
+      throw new Error(error.message || 'Invalid credentials');
+    }
+
+    return response.json();
+  }
+
+  async register(request: RegisterRequest): Promise<AuthResponse> {
+    const response = await fetch(`${AUTH_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Registration failed' }));
+      if (error.error === 'EMAIL_ALREADY_EXISTS') {
+        throw new Error('Email already registered');
+      }
+      if (error.details) {
+        const firstError = Object.values(error.details)[0];
+        throw new Error(firstError as string);
+      }
+      throw new Error(error.message || 'Registration failed');
+    }
+
+    return response.json();
+  }
+
+  async getCurrentUser(token: string): Promise<User> {
+    const response = await fetch(`${AUTH_URL}/me`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to get current user');
+    }
+
+    return response.json();
+  }
+}
+
+export const authApi = new AuthApi();

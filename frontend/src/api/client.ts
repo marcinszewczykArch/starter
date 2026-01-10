@@ -4,11 +4,25 @@ interface RequestOptions extends RequestInit {
   params?: Record<string, string>;
 }
 
+const TOKEN_KEY = 'auth_token';
+
+// Handler for 401 errors (token expired)
+let authErrorHandler: (() => void) | null = null;
+
+export function setAuthErrorHandler(handler: () => void) {
+  authErrorHandler = handler;
+}
+
 class ApiClient {
   private baseUrl: string;
 
   constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
+  }
+
+  private getAuthHeaders(): Record<string, string> {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   private buildUrl(endpoint: string, params?: Record<string, string>): string {
@@ -25,6 +39,11 @@ class ApiClient {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
+      // Auto-logout on 401 (token expired/invalid)
+      if (response.status === 401 && authErrorHandler) {
+        authErrorHandler();
+      }
+
       const errorMessage = await response.text().catch(() => 'Unknown error');
       throw new Error(`API Error: ${response.status} - ${errorMessage}`);
     }
@@ -45,6 +64,7 @@ class ApiClient {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
         ...options?.headers,
       },
     });
@@ -59,6 +79,7 @@ class ApiClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
         ...options?.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
@@ -74,6 +95,7 @@ class ApiClient {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
         ...options?.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
@@ -89,6 +111,7 @@ class ApiClient {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
         ...options?.headers,
       },
     });
