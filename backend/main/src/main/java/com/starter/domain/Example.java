@@ -15,6 +15,7 @@ import java.time.Instant;
 public class Example {
 
     private Long id;
+    private Long userId;
     private String name;
     private String description;
     private boolean active;
