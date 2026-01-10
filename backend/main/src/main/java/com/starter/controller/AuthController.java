@@ -1,9 +1,12 @@
 package com.starter.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.starter.dto.AuthResponse;
 import com.starter.dto.LoginRequest;
 import com.starter.dto.RegisterRequest;
+import com.starter.dto.UserResponse;
+import com.starter.security.UserPrincipal;
 import com.starter.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -37,5 +42,11 @@ public class AuthController {
     @Operation(summary = "Login with email and password")
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user info", security = @SecurityRequirement(name = "bearerAuth"))
+    public UserResponse getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
+        return UserResponse.fromPrincipal(principal);
     }
 }

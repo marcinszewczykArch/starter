@@ -251,4 +251,56 @@ class AuthControllerIntegrationTest extends BaseIntegrationTest {
             .statusCode(200)
             .body("email", equalTo("casetest@example.com"));
     }
+
+    @Test
+    void me_shouldReturnCurrentUser_whenAuthenticated() {
+        // First register and get token
+        String token =
+            given()
+                .contentType(ContentType.JSON)
+                .body(
+                    """
+                        {
+                            "email": "metest@example.com",
+                            "password": "password123"
+                        }
+                        """
+                )
+                .when()
+                .post("/api/auth/register")
+                .then()
+                .statusCode(201)
+                .extract()
+                .path("token");
+
+        // Use token to access /me endpoint
+        given()
+            .header("Authorization", "Bearer " + token)
+            .when()
+            .get("/api/auth/me")
+            .then()
+            .statusCode(200)
+            .body("email", equalTo("metest@example.com"))
+            .body("role", equalTo("USER"))
+            .body("id", notNullValue());
+    }
+
+    @Test
+    void me_shouldReturn401_whenNoToken() {
+        given()
+            .when()
+            .get("/api/auth/me")
+            .then()
+            .statusCode(401);
+    }
+
+    @Test
+    void me_shouldReturn401_whenInvalidToken() {
+        given()
+            .header("Authorization", "Bearer invalid-token")
+            .when()
+            .get("/api/auth/me")
+            .then()
+            .statusCode(401);
+    }
 }
