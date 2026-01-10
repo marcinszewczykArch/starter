@@ -305,8 +305,6 @@ New examples are automatically assigned to the creating user.
 | `JWT_SECRET` | (dev default) | JWT signing secret (min 32 chars) |
 | `JWT_EXPIRATION_MS` | 86400000 | Token expiration (24h default) |
 | `CORS_ALLOWED_ORIGINS` | localhost:5173,3000 | Allowed CORS origins |
-| `SWAGGER_USER` | admin | Swagger UI username (prod only) |
-| `SWAGGER_PASSWORD` | admin | Swagger UI password (prod only) |
 
 #### Frontend
 
@@ -461,8 +459,6 @@ Click **New repository secret** for each:
 | `DB_PASSWORD` | `YourSecurePass123!` | Database password |
 | `JWT_SECRET` | (generate - see below) | JWT signing secret (min 32 chars) |
 | `CORS_ALLOWED_ORIGINS` | `https://yourdomain.com` | Allowed CORS origins (comma separated) |
-| `SWAGGER_USER` | `admin` | Swagger UI username |
-| `SWAGGER_PASSWORD` | `SwaggerSecret123!` | Swagger UI password |
 | `GRAFANA_PASSWORD` | `GrafanaSecret123!` | Grafana admin password |
 
 **🔑 Generate `JWT_SECRET`:**
@@ -514,7 +510,7 @@ After ~5 minutes:
 | Swagger UI | `http://EC2_IP/swagger-ui/index.html` |
 | Health check | `http://EC2_IP/actuator/health` |
 
-Swagger requires login with `SWAGGER_USER` / `SWAGGER_PASSWORD`.
+Swagger UI is publicly accessible. To execute API calls, click "Authorize" and enter your JWT token.
 
 ---
 

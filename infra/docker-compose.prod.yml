@@ -33,8 +33,6 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
-      - SWAGGER_USER=${SWAGGER_USER:-admin}
-      - SWAGGER_PASSWORD=${SWAGGER_PASSWORD}
     expose:
       - "8080"
     depends_on:

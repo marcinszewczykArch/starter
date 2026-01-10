@@ -4,15 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Security configuration for production. Protects API endpoints with JWT and Swagger UI with Basic
- * Auth.
+ * Security configuration for production. Protects API endpoints with JWT. Swagger UI is publicly
+ * accessible (docs only), but API calls require JWT authentication.
  */
 @Configuration
 @EnableWebSecurity
@@ -29,12 +28,12 @@ public class SecurityConfig {
         securityConfigurer.applyCommonSecuritySettings(http);
         securityConfigurer.applyPublicEndpointRules(http);
 
-        // Prod-specific: Swagger requires Basic Auth
+        // Swagger UI is publicly accessible (viewing docs doesn't require auth)
+        // But API calls made through Swagger still require JWT
         http.authorizeHttpRequests(
             auth -> auth.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**")
-                .authenticated()
-        )
-            .httpBasic(Customizer.withDefaults());
+                .permitAll()
+        );
 
         securityConfigurer.applyApiAuthenticationRules(http);
 
