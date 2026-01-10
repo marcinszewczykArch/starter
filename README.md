@@ -458,10 +458,23 @@ Click **New repository secret** for each:
 | `EC2_SSH_KEY` | Contents of `.pem` file | `cat starter-key.pem` |
 | `DB_USER` | `postgres` | Database username |
 | `DB_PASSWORD` | `YourSecurePass123!` | Database password |
-| `JWT_SECRET` | `YourJWTSecretKey32CharsMinimum!` | JWT signing secret (min 32 chars) |
+| `JWT_SECRET` | (generate - see below) | JWT signing secret (min 32 chars) |
 | `SWAGGER_USER` | `admin` | Swagger UI username |
 | `SWAGGER_PASSWORD` | `SwaggerSecret123!` | Swagger UI password |
 | `GRAFANA_PASSWORD` | `GrafanaSecret123!` | Grafana admin password |
+
+**🔑 Generate `JWT_SECRET`:**
+
+```bash
+# Run this command to generate a secure random key:
+openssl rand -base64 32
+```
+
+Example output: `Cl+N3RD0LitWw3jREk4ZWQPzIjzIFr1W2gKge4flvlc=`
+
+Copy the entire output (including `=` at the end) and paste as the secret value.
+
+> ⚠️ **Never use example values from documentation!** Always generate your own unique key.
 
 **⚠️ For `EC2_SSH_KEY`**: Copy the ENTIRE file content including:
 ```
