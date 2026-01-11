@@ -284,13 +284,51 @@ Examples are filtered based on the authenticated user:
 
 New examples are automatically assigned to the creating user.
 
+## 🛡️ Rate Limiting
+
+Rate limiting is handled by **nginx** (no application code needed).
+
+### Limits
+
+| Endpoint | Limit | Burst | Purpose |
+|----------|-------|-------|---------|
+| `/api/auth/*` | 1 req/sec | 3 | Brute-force protection |
+| `/api/*` | 10 req/sec | 20 | General API protection |
+
+### How it works
+
+- Limits are **per IP address**
+- Exceeding the limit returns **429 Too Many Requests**
+- Burst allows short spikes (e.g., double-click on login)
+
+### Auth endpoint protection
+
+```
+1 req/sec = 60 attempts/min = 3600/hour
+→ Brute-force attacks become impractical
+```
+
+### Configuration
+
+Rate limits are defined in `infra/nginx.prod.conf`:
+
+```nginx
+# Auth: 1 req/sec (strict)
+limit_req_zone $binary_remote_addr zone=auth_limit:10m rate=1r/s;
+
+# API: 10 req/sec (general)
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=10r/s;
+```
+
+To change limits, modify the `rate=` value and redeploy.
+
 ## ⚙️ Configuration
 
 ### Backend Profiles
 
 - `local` - Local development (PostgreSQL on port 5432)
 - `test` - Testing (PostgreSQL on port 5433)
-- `prod` - Production (PostgreSQL in Docker, Swagger protected with Basic Auth)
+- `prod` - Production (PostgreSQL in Docker, rate limiting enabled)
 
 ### Environment Variables
 
