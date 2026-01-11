@@ -22,8 +22,9 @@ public class AuthService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final EmailVerificationService emailVerificationService;
 
-    /** Register a new user. */
+    /** Register a new user and send verification email. */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         String normalizedEmail = normalizeEmail(request.getEmail());
@@ -32,6 +33,9 @@ public class AuthService {
         String hashedPassword = passwordEncoder.encode(request.getPassword());
         User user = userService.createUser(normalizedEmail, hashedPassword, User.Role.USER);
 
+        // Send verification email
+        emailVerificationService.sendVerificationEmail(user);
+
         String token = jwtUtil.generateToken(user);
 
         return AuthResponse.builder()
@@ -39,6 +43,7 @@ public class AuthService {
             .userId(user.getId())
             .email(user.getEmail())
             .role(user.getRole().name())
+            .emailVerified(user.isEmailVerified())
             .build();
     }
 
@@ -70,6 +75,7 @@ public class AuthService {
             .userId(user.getId())
             .email(user.getEmail())
             .role(user.getRole().name())
+            .emailVerified(user.isEmailVerified())
             .build();
     }
 

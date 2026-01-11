@@ -18,6 +18,9 @@ public class User {
     private String email;
     private String password;
     private Role role;
+    private boolean emailVerified;
+    private String verificationToken;
+    private Instant verificationTokenExpiresAt;
     private Instant createdAt;
     private Instant updatedAt;
 

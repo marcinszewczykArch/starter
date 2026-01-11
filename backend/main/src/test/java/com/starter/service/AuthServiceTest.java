@@ -35,11 +35,15 @@ class AuthServiceTest {
     @Mock
     private JwtUtil jwtUtil;
 
+    @Mock
+    private EmailVerificationService emailVerificationService;
+
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        authService = new AuthService(userService, passwordEncoder, jwtUtil);
+        authService =
+            new AuthService(userService, passwordEncoder, jwtUtil, emailVerificationService);
     }
 
     @Test
@@ -55,6 +59,7 @@ class AuthServiceTest {
                 .email("new@example.com")
                 .password("hashedPassword")
                 .role(User.Role.USER)
+                .emailVerified(false)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -72,9 +77,11 @@ class AuthServiceTest {
         assertThat(response.getUserId()).isEqualTo(1L);
         assertThat(response.getEmail()).isEqualTo("new@example.com");
         assertThat(response.getRole()).isEqualTo("USER");
+        assertThat(response.isEmailVerified()).isFalse();
 
         verify(passwordEncoder).encode("password123");
         verify(userService).createUser("new@example.com", "hashedPassword", User.Role.USER);
+        verify(emailVerificationService).sendVerificationEmail(savedUser);
         verify(jwtUtil).generateToken(savedUser);
     }
 
@@ -91,6 +98,7 @@ class AuthServiceTest {
                 .email("user@example.com")
                 .password("hashedPassword")
                 .role(User.Role.USER)
+                .emailVerified(true)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -107,6 +115,7 @@ class AuthServiceTest {
         assertThat(response.getUserId()).isEqualTo(1L);
         assertThat(response.getEmail()).isEqualTo("user@example.com");
         assertThat(response.getRole()).isEqualTo("USER");
+        assertThat(response.isEmailVerified()).isTrue();
     }
 
     @Test

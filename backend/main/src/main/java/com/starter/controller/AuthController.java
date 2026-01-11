@@ -10,15 +10,20 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.starter.dto.AuthResponse;
 import com.starter.dto.LoginRequest;
+import com.starter.dto.MessageResponse;
 import com.starter.dto.RegisterRequest;
+import com.starter.dto.ResendVerificationRequest;
 import com.starter.dto.UserResponse;
+import com.starter.dto.VerifyEmailRequest;
 import com.starter.security.UserPrincipal;
 import com.starter.service.AuthService;
+import com.starter.service.EmailVerificationService;
 
 import jakarta.validation.Valid;
 
@@ -26,14 +31,15 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "User registration and login")
+@Tag(name = "Authentication", description = "User registration, login, and email verification")
 public class AuthController {
 
     private final AuthService authService;
+    private final EmailVerificationService emailVerificationService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    @Operation(summary = "Register a new user")
+    @Operation(summary = "Register a new user and send verification email")
     public AuthResponse register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
     }
@@ -48,5 +54,26 @@ public class AuthController {
     @Operation(summary = "Get current user info", security = @SecurityRequirement(name = "bearerAuth"))
     public UserResponse getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
         return UserResponse.fromPrincipal(principal);
+    }
+
+    @PostMapping("/verify-email")
+    @Operation(summary = "Verify email address with token")
+    public MessageResponse verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        emailVerificationService.verifyEmail(request.getToken());
+        return MessageResponse.of("Email verified successfully");
+    }
+
+    @GetMapping("/verify-email")
+    @Operation(summary = "Verify email address with token (GET for email links)")
+    public MessageResponse verifyEmailGet(@RequestParam String token) {
+        emailVerificationService.verifyEmail(token);
+        return MessageResponse.of("Email verified successfully");
+    }
+
+    @PostMapping("/resend-verification")
+    @Operation(summary = "Resend verification email")
+    public MessageResponse resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
+        emailVerificationService.resendVerificationEmail(request.getEmail());
+        return MessageResponse.of("Verification email sent");
     }
 }

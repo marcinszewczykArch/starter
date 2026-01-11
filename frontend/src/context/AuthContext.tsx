@@ -76,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: response.userId,
       email: response.email,
       role: response.role,
+      emailVerified: response.emailVerified,
     };
 
     localStorage.setItem(TOKEN_KEY, response.token);
@@ -90,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       id: response.userId,
       email: response.email,
       role: response.role,
+      emailVerified: response.emailVerified,
     };
 
     localStorage.setItem(TOKEN_KEY, response.token);

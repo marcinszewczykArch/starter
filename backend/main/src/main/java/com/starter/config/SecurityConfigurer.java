@@ -33,7 +33,12 @@ public class SecurityConfigurer {
     /** Apply authorization rules for public endpoints (auth, actuator). */
     public void applyPublicEndpointRules(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(
-            auth -> auth.requestMatchers("/api/auth/login", "/api/auth/register")
+            auth -> auth.requestMatchers(
+                "/api/auth/login",
+                "/api/auth/register",
+                "/api/auth/verify-email",
+                "/api/auth/resend-verification"
+            )
                 .permitAll()
                 .requestMatchers("/actuator/**")
                 .permitAll()

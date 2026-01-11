@@ -5,6 +5,7 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { Dashboard } from './pages/Dashboard';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 
 function AppRoutes() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -32,6 +33,7 @@ function AppRoutes() {
         path="/register"
         element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />}
       />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
 
       {/* Protected routes */}
       <Route

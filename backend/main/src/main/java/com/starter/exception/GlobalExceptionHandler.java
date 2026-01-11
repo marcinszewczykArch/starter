@@ -55,6 +55,17 @@ public class GlobalExceptionHandler {
             .build();
     }
 
+    @ExceptionHandler(InvalidTokenException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidToken(InvalidTokenException ex) {
+        log.warn("Invalid token: {}", ex.getMessage());
+
+        return ErrorResponse.builder()
+            .error("INVALID_TOKEN")
+            .message(ex.getMessage())
+            .build();
+    }
+
     @ExceptionHandler(com.starter.service.EmailService.EmailSendException.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public ErrorResponse handleEmailSendException(

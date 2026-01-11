@@ -18,6 +18,7 @@ export interface User {
   id: number;
   email: string;
   role: 'USER' | 'ADMIN';
+  emailVerified?: boolean;
 }
 
 export interface AuthResponse {
@@ -25,6 +26,11 @@ export interface AuthResponse {
   userId: number;
   email: string;
   role: 'USER' | 'ADMIN';
+  emailVerified: boolean;
+}
+
+export interface MessageResponse {
+  message: string;
 }
 
 export interface LoginRequest {
