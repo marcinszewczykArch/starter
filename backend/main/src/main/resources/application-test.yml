@@ -7,3 +7,8 @@ spring:
 logging:
   level:
     com.starter: DEBUG
+
+# Disable email sending during tests
+app:
+  email:
+    enabled: false

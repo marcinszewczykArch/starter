@@ -55,6 +55,19 @@ public class GlobalExceptionHandler {
             .build();
     }
 
+    @ExceptionHandler(com.starter.service.EmailService.EmailSendException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public ErrorResponse handleEmailSendException(
+        com.starter.service.EmailService.EmailSendException ex
+    ) {
+        log.error("Email send failed: {}", ex.getMessage());
+
+        return ErrorResponse.builder()
+            .error("EMAIL_SEND_FAILED")
+            .message("Failed to send email. Please try again later.")
+            .build();
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleGenericException(Exception ex) {
