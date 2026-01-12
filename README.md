@@ -238,8 +238,65 @@ The JWT token contains:
 - `sub` (subject): User ID
 - `email`: User email
 - `role`: User role (USER/ADMIN)
+- `emailVerified`: Whether email is verified
 - `iat`: Issued at timestamp
 - `exp`: Expiration timestamp (default: 24 hours)
+
+### Email Verification Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant E as Email (SES)
+
+    U->>F: Register with email
+    F->>B: POST /api/auth/register
+    B->>B: Create user (emailVerified=false)
+    B->>E: Send verification email
+    B-->>F: {token, emailVerified: false}
+    F-->>U: Show "Check your email"
+    
+    Note over U: User clicks link in email
+    U->>F: GET /verify-email?token=xxx
+    F->>B: POST /api/auth/verify-email
+    B->>B: Mark email verified
+    B-->>F: Success
+    F-->>U: "Email verified! Go to login"
+    
+    U->>F: Login
+    F->>B: POST /api/auth/login
+    B-->>F: {token, emailVerified: true}
+    F-->>U: Redirect to Dashboard
+```
+
+### Password Reset Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant E as Email (SES)
+
+    U->>F: Click "Forgot password?"
+    F->>B: POST /api/auth/forgot-password
+    B->>B: Generate reset token (1h expiry)
+    B->>E: Send reset email
+    B-->>F: "If email exists, link sent"
+    
+    Note over U: User clicks link in email
+    U->>F: GET /reset-password?token=xxx
+    F-->>U: Show new password form
+    
+    U->>F: Submit new password
+    F->>B: POST /api/auth/reset-password
+    B->>B: Validate token, update password
+    B-->>F: Success
+    F-->>U: "Password changed! Redirecting..."
+    F->>F: Redirect to /login
+```
 
 ### API Endpoints
 
@@ -248,6 +305,10 @@ The JWT token contains:
 | `/api/auth/register` | POST | ❌ | Register new user |
 | `/api/auth/login` | POST | ❌ | Login and get token |
 | `/api/auth/me` | GET | ✅ | Get current user info |
+| `/api/auth/verify-email` | POST | ❌ | Verify email with token |
+| `/api/auth/resend-verification` | POST | ❌ | Resend verification email |
+| `/api/auth/forgot-password` | POST | ❌ | Request password reset |
+| `/api/auth/reset-password` | POST | ❌ | Reset password with token |
 | `/api/examples` | GET | ✅ | List examples (filtered by user) |
 | `/api/examples` | POST | ✅ | Create new example |
 

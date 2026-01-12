@@ -21,6 +21,8 @@ public class User {
     private boolean emailVerified;
     private String verificationToken;
     private Instant verificationTokenExpiresAt;
+    private String passwordResetToken;
+    private Instant passwordResetTokenExpiresAt;
     private Instant createdAt;
     private Instant updatedAt;
 

@@ -85,6 +85,36 @@ class AuthApi {
 
     return response.json();
   }
+
+  async forgotPassword(email: string): Promise<MessageResponse> {
+    const response = await fetch(`${AUTH_URL}/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Request failed' }));
+      throw new Error(error.message || 'Failed to send reset email');
+    }
+
+    return response.json();
+  }
+
+  async resetPassword(token: string, password: string): Promise<MessageResponse> {
+    const response = await fetch(`${AUTH_URL}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, password }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Reset failed' }));
+      throw new Error(error.message || 'Invalid or expired token');
+    }
+
+    return response.json();
+  }
 }
 
 export const authApi = new AuthApi();

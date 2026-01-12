@@ -24,7 +24,8 @@ public class UserRepository {
 
     private static final String SELECT_FIELDS =
         "id, email, password, role, email_verified, verification_token, "
-            + "verification_token_expires_at, created_at, updated_at";
+            + "verification_token_expires_at, password_reset_token, "
+            + "password_reset_token_expires_at, created_at, updated_at";
 
     /** Find user by email. */
     public Optional<User> findByEmail(String email) {
@@ -147,10 +148,58 @@ public class UserRepository {
             .update();
     }
 
+    /** Find user by password reset token. */
+    public Optional<User> findByPasswordResetToken(String token) {
+        return jdbcClient
+            .sql("SELECT " + SELECT_FIELDS + " FROM users WHERE password_reset_token = :token")
+            .param("token", token)
+            .query(ROW_MAPPER)
+            .optional();
+    }
+
+    /** Update password reset token for a user. */
+    public void updatePasswordResetToken(Long userId, String token, Instant expiresAt) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET password_reset_token = :token,
+                        password_reset_token_expires_at = :expiresAt,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("token", token)
+            .param("expiresAt", expiresAt != null ? Timestamp.from(expiresAt) : null)
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Update user password and clear reset token. */
+    public void updatePassword(Long userId, String hashedPassword) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET password = :password,
+                        password_reset_token = NULL,
+                        password_reset_token_expires_at = NULL,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("password", hashedPassword)
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
     private static final class UserRowMapper implements RowMapper<User> {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-            Timestamp tokenExpires = rs.getTimestamp("verification_token_expires_at");
+            Timestamp verificationExpires = rs.getTimestamp("verification_token_expires_at");
+            Timestamp passwordResetExpires = rs.getTimestamp("password_reset_token_expires_at");
             return User.builder()
                 .id(rs.getLong("id"))
                 .email(rs.getString("email"))
@@ -158,7 +207,13 @@ public class UserRepository {
                 .role(User.Role.valueOf(rs.getString("role")))
                 .emailVerified(rs.getBoolean("email_verified"))
                 .verificationToken(rs.getString("verification_token"))
-                .verificationTokenExpiresAt(tokenExpires != null ? tokenExpires.toInstant() : null)
+                .verificationTokenExpiresAt(
+                    verificationExpires != null ? verificationExpires.toInstant() : null
+                )
+                .passwordResetToken(rs.getString("password_reset_token"))
+                .passwordResetTokenExpiresAt(
+                    passwordResetExpires != null ? passwordResetExpires.toInstant() : null
+                )
                 .createdAt(rs.getTimestamp("created_at").toInstant())
                 .updatedAt(rs.getTimestamp("updated_at").toInstant())
                 .build();

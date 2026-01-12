@@ -7,6 +7,8 @@ import { RegisterPage } from './pages/RegisterPage';
 import { Dashboard } from './pages/Dashboard';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import { VerificationPendingPage } from './pages/VerificationPendingPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 function AppRoutes() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -49,6 +51,8 @@ function AppRoutes() {
         }
       />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       {/* Verification pending - for authenticated but unverified users */}
       <Route

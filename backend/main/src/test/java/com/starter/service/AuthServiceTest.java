@@ -17,6 +17,7 @@ import com.starter.dto.AuthResponse;
 import com.starter.dto.LoginRequest;
 import com.starter.dto.RegisterRequest;
 import com.starter.exception.InvalidCredentialsException;
+import com.starter.repository.UserRepository;
 import com.starter.security.JwtUtil;
 
 import java.time.Instant;
@@ -30,6 +31,9 @@ class AuthServiceTest {
     private UserService userService;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -38,12 +42,22 @@ class AuthServiceTest {
     @Mock
     private EmailVerificationService emailVerificationService;
 
+    @Mock
+    private EmailService emailService;
+
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
         authService =
-            new AuthService(userService, passwordEncoder, jwtUtil, emailVerificationService);
+            new AuthService(
+                userService,
+                userRepository,
+                passwordEncoder,
+                jwtUtil,
+                emailVerificationService,
+                emailService
+            );
     }
 
     @Test

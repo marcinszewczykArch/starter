@@ -21,6 +21,7 @@ public class UserPrincipal implements UserDetails {
     private final Long id;
     private final String email;
     private final User.Role role;
+    private final boolean emailVerified;
 
     /** Create UserPrincipal from User entity. */
     public static UserPrincipal fromUser(User user) {
@@ -28,6 +29,7 @@ public class UserPrincipal implements UserDetails {
             .id(user.getId())
             .email(user.getEmail())
             .role(user.getRole())
+            .emailVerified(user.isEmailVerified())
             .build();
     }
 

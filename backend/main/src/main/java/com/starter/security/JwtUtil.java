@@ -43,6 +43,7 @@ public class JwtUtil {
             .subject(user.getId().toString())
             .claim("email", user.getEmail())
             .claim("role", user.getRole().name())
+            .claim("emailVerified", user.isEmailVerified())
             .issuedAt(Date.from(now))
             .expiration(Date.from(expiration))
             .signWith(secretKey)

@@ -80,13 +80,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             Long userId = Long.parseLong(claims.getSubject());
             String email = claims.get("email", String.class);
             String roleStr = claims.get("role", String.class);
+            Boolean emailVerified = claims.get("emailVerified", Boolean.class);
 
             if (email == null || roleStr == null) {
                 return null;
             }
 
             User.Role role = User.Role.valueOf(roleStr);
-            return UserPrincipal.builder().id(userId).email(email).role(role).build();
+            return UserPrincipal.builder()
+                .id(userId)
+                .email(email)
+                .role(role)
+                .emailVerified(emailVerified != null && emailVerified)
+                .build();
         } catch (IllegalArgumentException e) {
             log.debug("Failed to parse token claims: {}", e.getMessage());
             return null;

@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.starter.dto.AuthResponse;
+import com.starter.dto.ForgotPasswordRequest;
 import com.starter.dto.LoginRequest;
 import com.starter.dto.MessageResponse;
 import com.starter.dto.RegisterRequest;
 import com.starter.dto.ResendVerificationRequest;
+import com.starter.dto.ResetPasswordRequest;
 import com.starter.dto.UserResponse;
 import com.starter.dto.VerifyEmailRequest;
 import com.starter.security.UserPrincipal;
@@ -75,5 +77,19 @@ public class AuthController {
     public MessageResponse resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
         emailVerificationService.resendVerificationEmail(request.getEmail());
         return MessageResponse.of("Verification email sent");
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset email")
+    public MessageResponse forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.requestPasswordReset(request.getEmail());
+        return MessageResponse.of("If the email exists, a reset link has been sent");
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password using token")
+    public MessageResponse resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.getToken(), request.getPassword());
+        return MessageResponse.of("Password reset successfully");
     }
 }

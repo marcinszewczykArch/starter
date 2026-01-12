@@ -18,6 +18,7 @@ public class UserResponse {
     private Long id;
     private String email;
     private String role;
+    private boolean emailVerified;
 
     /** Create UserResponse from User entity. */
     public static UserResponse fromUser(User user) {
@@ -25,6 +26,7 @@ public class UserResponse {
             .id(user.getId())
             .email(user.getEmail())
             .role(user.getRole().name())
+            .emailVerified(user.isEmailVerified())
             .build();
     }
 
@@ -34,6 +36,7 @@ public class UserResponse {
             .id(principal.getId())
             .email(principal.getEmail())
             .role(principal.getRole().name())
+            .emailVerified(principal.isEmailVerified())
             .build();
     }
 }

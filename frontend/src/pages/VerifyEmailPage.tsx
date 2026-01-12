@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { authApi } from '../api/authApi';
+import { useAuth } from '../context/AuthContext';
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
+  const { logout, isAuthenticated } = useAuth();
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
@@ -21,6 +23,10 @@ export default function VerifyEmailPage() {
         const response = await authApi.verifyEmail(token);
         setStatus('success');
         setMessage(response.message);
+        // Logout to clear stale token - user will get fresh token with emailVerified=true on next login
+        if (isAuthenticated) {
+          logout();
+        }
       } catch (err) {
         setStatus('error');
         setMessage(err instanceof Error ? err.message : 'Verification failed');
@@ -28,7 +34,7 @@ export default function VerifyEmailPage() {
     };
 
     verifyEmail();
-  }, [token]);
+  }, [token, isAuthenticated, logout]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4">
