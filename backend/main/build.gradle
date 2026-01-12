@@ -26,10 +26,6 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
-    // AWS SES
-    implementation platform('software.amazon.awssdk:bom:2.24.0')
-    implementation 'software.amazon.awssdk:ses'
-
     // Micrometer (via actuator)
     implementation 'io.micrometer:micrometer-registry-prometheus'
 

@@ -1,29 +1,36 @@
 package com.starter.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import software.amazon.awssdk.services.ses.SesClient;
-import software.amazon.awssdk.services.ses.model.Body;
-import software.amazon.awssdk.services.ses.model.Content;
-import software.amazon.awssdk.services.ses.model.Destination;
-import software.amazon.awssdk.services.ses.model.Message;
-import software.amazon.awssdk.services.ses.model.SendEmailRequest;
-import software.amazon.awssdk.services.ses.model.SesException;
 
 import com.starter.config.EmailConfig;
 
+import java.io.IOException;
+import java.net.URI;
 import java.net.URLEncoder;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
-/** Service for sending emails via AWS SES. */
+/** Service for sending emails via Resend API. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final SesClient sesClient;
+    private static final String RESEND_API_URL = "https://api.resend.com/emails";
+    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(10))
+        .build();
+
     private final EmailConfig emailConfig;
+    private final ObjectMapper objectMapper;
 
     /**
      * Send a verification email with a token link.
@@ -57,19 +64,7 @@ public class EmailService {
                 """
                 .formatted(emailConfig.getAppName(), verifyUrl, verifyUrl, verifyUrl);
 
-        String textBody =
-            """
-                Welcome to %s!
-
-                Please verify your email address by visiting this link:
-                %s
-
-                This link will expire in 24 hours.
-
-                If you didn't create an account, you can ignore this email.
-                """.formatted(emailConfig.getAppName(), verifyUrl);
-
-        sendEmail(toEmail, subject, htmlBody, textBody);
+        sendEmail(toEmail, subject, htmlBody);
     }
 
     /**
@@ -104,60 +99,54 @@ public class EmailService {
                 """
                 .formatted(resetUrl, resetUrl, resetUrl);
 
-        String textBody =
-            """
-                Password Reset Request
-
-                You requested to reset your password. Visit this link:
-                %s
-
-                This link will expire in 1 hour.
-
-                If you didn't request this, you can ignore this email. Your password won't change.
-                """.formatted(resetUrl);
-
-        sendEmail(toEmail, subject, htmlBody, textBody);
+        sendEmail(toEmail, subject, htmlBody);
     }
 
     /**
-     * Send a generic email.
+     * Send an email via Resend API.
      *
-     * @param toEmail  recipient email address
-     * @param subject  email subject
-     * @param htmlBody HTML content
-     * @param textBody plain text content (fallback)
+     * @param toEmail recipient email address
+     * @param subject email subject
+     * @param html    HTML content
      */
-    public void sendEmail(String toEmail, String subject, String htmlBody, String textBody) {
+    public void sendEmail(String toEmail, String subject, String html) {
         if (!emailConfig.isEnabled()) {
             log.info("Email sending disabled. Would send to: {} subject: {}", toEmail, subject);
             return;
         }
 
         try {
-            SendEmailRequest request = SendEmailRequest.builder()
-                .source(emailConfig.getFromAddress())
-                .destination(Destination.builder().toAddresses(toEmail).build())
-                .message(
-                    Message.builder()
-                        .subject(Content.builder().data(subject).charset("UTF-8").build())
-                        .body(
-                            Body.builder()
-                                .html(Content.builder().data(htmlBody).charset("UTF-8").build())
-                                .text(Content.builder().data(textBody).charset("UTF-8").build())
-                                .build()
-                        )
-                        .build()
-                )
+            Map<String, Object> payload = Map.of(
+                "from", emailConfig.getFromAddress(),
+                "to", List.of(toEmail),
+                "subject", subject,
+                "html", html
+            );
+
+            String jsonBody = objectMapper.writeValueAsString(payload);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(RESEND_API_URL))
+                .header("Authorization", "Bearer " + emailConfig.getApiKey())
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .timeout(Duration.ofSeconds(30))
                 .build();
 
-            sesClient.sendEmail(request);
-            log.info("Email sent successfully to: {}", toEmail);
+            HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
 
-        } catch (SesException e) {
-            String errorMsg = e.awsErrorDetails() != null
-                ? e.awsErrorDetails().errorMessage()
-                : e.getMessage();
-            log.error("Failed to send email to {}: {}", toEmail, errorMsg);
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                log.info("Email sent successfully to: {}", toEmail);
+            } else {
+                log.error("Failed to send email to {}: {} - {}", toEmail, response.statusCode(), response.body());
+                throw new EmailSendException("Failed to send email: " + response.body(), null);
+            }
+
+        } catch (IOException | InterruptedException e) {
+            log.error("Failed to send email to {}: {}", toEmail, e.getMessage());
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             throw new EmailSendException("Failed to send email to " + toEmail, e);
         }
     }

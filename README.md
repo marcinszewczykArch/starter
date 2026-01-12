@@ -270,7 +270,7 @@ sequenceDiagram
     participant U as User
     participant F as Frontend
     participant B as Backend
-    participant E as Email (SES)
+    participant E as Email (Resend)
 
     U->>F: Register with email
     F->>B: POST /api/auth/register
@@ -299,7 +299,7 @@ sequenceDiagram
     participant U as User
     participant F as Frontend
     participant B as Backend
-    participant E as Email (SES)
+    participant E as Email (Resend)
 
     U->>F: Click "Forgot password?"
     F->>B: POST /api/auth/forgot-password
@@ -580,6 +580,7 @@ Click **New repository secret** for each:
 | `JWT_SECRET` | (generate - see below) | JWT signing secret (min 32 chars) |
 | `CORS_ALLOWED_ORIGINS` | `https://yourdomain.com` | Allowed CORS origins (comma separated) |
 | `GRAFANA_PASSWORD` | `GrafanaSecret123!` | Grafana admin password |
+| `RESEND_API_KEY` | `re_xxxxx...` | Resend API key for emails |
 
 **🔑 Generate `JWT_SECRET`:**
 

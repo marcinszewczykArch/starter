@@ -8,7 +8,7 @@ logging:
   level:
     com.starter: DEBUG
 
-# Disable email sending locally (no AWS credentials)
+# Disable email sending locally (no Resend API key)
 app:
   email:
     enabled: false

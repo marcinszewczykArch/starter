@@ -41,9 +41,3 @@ variable "allowed_ssh_cidr" {
   default     = "0.0.0.0/0" # Restrict this to your IP in production!
 }
 
-# SES (Email)
-variable "ses_sender_email" {
-  description = "Email address to send from (will receive verification email)"
-  type        = string
-}
-

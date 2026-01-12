@@ -13,10 +13,8 @@ ec2_key_name       = "your-key-pair-name"  # Must exist in AWS!
 # Security - restrict SSH to your IP
 allowed_ssh_cidr = "1.2.3.4/32"  # Your public IP
 
-# Email (AWS SES)
-ses_sender_email = "noreply@yourdomain.com"  # Will receive verification email
-
 # Note: PostgreSQL runs in Docker on EC2 (no RDS needed)
+# Email is handled via Resend (API key in GitHub Secrets: RESEND_API_KEY)
 # Database credentials are managed via GitHub Secrets:
 #   - DB_USER (default: postgres)
 #   - DB_PASSWORD (your secure password)

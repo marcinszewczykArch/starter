@@ -36,8 +36,8 @@ app:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
   email:
     enabled: ${EMAIL_ENABLED:true}
-    from-address: ${EMAIL_FROM:marcinszewczyk.arch@gmail.com}
-    region: ${AWS_REGION:eu-central-1}
+    api-key: ${RESEND_API_KEY:}
+    from-address: ${EMAIL_FROM:Starter App <onboarding@resend.dev>}
     app-name: ${APP_NAME:Starter App}
     base-url: ${APP_BASE_URL:http://localhost:5173}
 
