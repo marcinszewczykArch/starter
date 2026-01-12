@@ -40,28 +40,22 @@ public class EmailService {
             """
                 <!DOCTYPE html>
                 <html>
-                <head>
-                    <style>
-                        .container { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; }
-                        .button { background-color: #4F46E5; color: white; padding: 12px 24px;
-                                  text-decoration: none; border-radius: 6px; display: inline-block; }
-                        .footer { color: #666; font-size: 12px; margin-top: 20px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <h2>Welcome to %s!</h2>
-                        <p>Please verify your email address by clicking the button below:</p>
-                        <p><a href="%s" class="button">Verify Email</a></p>
-                        <p>Or copy this link: <br><a href="%s">%s</a></p>
-                        <p>This link will expire in 24 hours.</p>
-                        <div class="footer">
-                            <p>If you didn't create an account, you can ignore this email.</p>
-                        </div>
+                <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                        <h2 style="color: #333; margin-top: 0;">Welcome to %s!</h2>
+                        <p style="color: #555; font-size: 16px;">Please verify your email address by clicking the button below:</p>
+                        <p style="text-align: center; margin: 30px 0;">
+                            <a href="%s" style="background-color: #4F46E5; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px;">Verify Email</a>
+                        </p>
+                        <p style="color: #555; font-size: 14px;">Or copy this link:<br><a href="%s" style="color: #4F46E5;">%s</a></p>
+                        <p style="color: #555; font-size: 14px;">This link will expire in 24 hours.</p>
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                        <p style="color: #999; font-size: 12px;">If you didn't create an account, you can ignore this email.</p>
                     </div>
                 </body>
                 </html>
-                """.formatted(emailConfig.getAppName(), verifyUrl, verifyUrl, verifyUrl);
+                """
+                .formatted(emailConfig.getAppName(), verifyUrl, verifyUrl, verifyUrl);
 
         String textBody =
             """
@@ -93,28 +87,22 @@ public class EmailService {
             """
                 <!DOCTYPE html>
                 <html>
-                <head>
-                    <style>
-                        .container { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; }
-                        .button { background-color: #4F46E5; color: white; padding: 12px 24px;
-                                  text-decoration: none; border-radius: 6px; display: inline-block; }
-                        .footer { color: #666; font-size: 12px; margin-top: 20px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <h2>Password Reset Request</h2>
-                        <p>You requested to reset your password. Click the button below:</p>
-                        <p><a href="%s" class="button">Reset Password</a></p>
-                        <p>Or copy this link: <br><a href="%s">%s</a></p>
-                        <p>This link will expire in 1 hour.</p>
-                        <div class="footer">
-                            <p>If you didn't request this, you can ignore this email. Your password won't change.</p>
-                        </div>
+                <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                        <h2 style="color: #333; margin-top: 0;">Password Reset Request</h2>
+                        <p style="color: #555; font-size: 16px;">You requested to reset your password. Click the button below:</p>
+                        <p style="text-align: center; margin: 30px 0;">
+                            <a href="%s" style="background-color: #4F46E5; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px;">Reset Password</a>
+                        </p>
+                        <p style="color: #555; font-size: 14px;">Or copy this link:<br><a href="%s" style="color: #4F46E5;">%s</a></p>
+                        <p style="color: #555; font-size: 14px;">This link will expire in 1 hour.</p>
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                        <p style="color: #999; font-size: 12px;">If you didn't request this, you can ignore this email. Your password won't change.</p>
                     </div>
                 </body>
                 </html>
-                """.formatted(resetUrl, resetUrl, resetUrl);
+                """
+                .formatted(resetUrl, resetUrl, resetUrl);
 
         String textBody =
             """

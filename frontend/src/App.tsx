@@ -6,9 +6,10 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { Dashboard } from './pages/Dashboard';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import { VerificationPendingPage } from './pages/VerificationPendingPage';
 
 function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -18,24 +19,48 @@ function AppRoutes() {
     );
   }
 
+  // Determine where to redirect authenticated users
+  const getAuthenticatedRedirect = () => {
+    if (user && !user.emailVerified) {
+      return '/verification-pending';
+    }
+    return '/dashboard';
+  };
+
   return (
     <Routes>
-      {/* Public routes - redirect to dashboard if already logged in */}
+      {/* Public routes - redirect to dashboard/verification if already logged in */}
       <Route
         path="/"
-        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />}
+        element={
+          isAuthenticated ? <Navigate to={getAuthenticatedRedirect()} replace /> : <LandingPage />
+        }
       />
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />}
+        element={
+          isAuthenticated ? <Navigate to={getAuthenticatedRedirect()} replace /> : <LoginPage />
+        }
       />
       <Route
         path="/register"
-        element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />}
+        element={
+          isAuthenticated ? <Navigate to={getAuthenticatedRedirect()} replace /> : <RegisterPage />
+        }
       />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
 
-      {/* Protected routes */}
+      {/* Verification pending - for authenticated but unverified users */}
+      <Route
+        path="/verification-pending"
+        element={
+          <ProtectedRoute requireVerified={false}>
+            <VerificationPendingPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Protected routes - require verified email */}
       <Route
         path="/dashboard"
         element={
