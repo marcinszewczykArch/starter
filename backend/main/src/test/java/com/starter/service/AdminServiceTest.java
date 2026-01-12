@@ -77,7 +77,9 @@ class AdminServiceTest {
             .emailVerified(true)
             .createdAt(testUser.getCreatedAt())
             .build();
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser), Optional.of(updatedUser));
+        when(userRepository.findById(1L))
+            .thenReturn(Optional.of(testUser))
+            .thenReturn(Optional.of(updatedUser));
 
         AdminUserDto result = adminService.changeUserRole(1L, User.Role.ADMIN, 2L);
 

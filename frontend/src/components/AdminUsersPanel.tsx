@@ -45,7 +45,9 @@ export function AdminUsersPanel() {
   };
 
   const handleDeleteUser = async (userId: number, email: string) => {
-    if (!confirm(`Are you sure you want to delete user "${email}"? This action cannot be undone.`)) {
+    if (
+      !confirm(`Are you sure you want to delete user "${email}"? This action cannot be undone.`)
+    ) {
       return;
     }
 
@@ -129,9 +131,7 @@ export function AdminUsersPanel() {
                   <td className="py-3">
                     <span
                       className={`text-xs px-2 py-1 rounded font-medium ${
-                        isAdmin
-                          ? 'bg-purple-100 text-purple-700'
-                          : 'bg-gray-100 text-gray-600'
+                        isAdmin ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'
                       }`}
                     >
                       {user.role}
@@ -177,7 +177,10 @@ export function AdminUsersPanel() {
 
                       {/* Info for admins - cannot delete */}
                       {!isCurrentUser && isAdmin && (
-                        <span className="text-xs text-gray-400" title="Admin accounts cannot be deleted through UI">
+                        <span
+                          className="text-xs text-gray-400"
+                          title="Admin accounts cannot be deleted through UI"
+                        >
                           Protected
                         </span>
                       )}
@@ -196,4 +199,3 @@ export function AdminUsersPanel() {
     </div>
   );
 }
-

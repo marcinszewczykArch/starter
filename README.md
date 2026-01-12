@@ -67,6 +67,7 @@ starter/
 │   └── terraform/              # AWS infrastructure (EC2 Spot)
 ├── scripts/                    # Utility scripts
 │   ├── dev.sh                  # Start dev environment
+│   ├── lint.sh                 # Lint & format (run before commit)
 │   └── test.sh                 # Run all tests
 ├── requests/                   # HTTP client requests (IntelliJ)
 ├── config/                     # Shared config
@@ -78,11 +79,31 @@ starter/
 
 ## 🛠 Available Commands
 
+### Pre-Commit Workflow ⚠️
+
+**Always run before committing** to ensure CI pipeline will pass:
+
+```bash
+# Step 1: Lint & format (fixes issues automatically)
+./scripts/lint.sh
+
+# Step 2: Run tests
+./scripts/test.sh
+
+# Step 3: Commit
+git add -A && git commit -m "your message"
+```
+
+This mirrors the CI pipeline: `lint → test → build → deploy`
+
 ### Development
 
 ```bash
 # Start full development environment
 ./scripts/dev.sh
+
+# Lint & format code (backend + frontend)
+./scripts/lint.sh
 
 # Run all tests
 ./scripts/test.sh

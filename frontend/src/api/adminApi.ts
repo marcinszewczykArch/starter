@@ -27,4 +27,3 @@ export const adminApi = {
     await apiClient.delete<void>(`${ADMIN_ENDPOINT}/users/${userId}`);
   },
 };
-
