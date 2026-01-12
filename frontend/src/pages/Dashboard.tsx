@@ -3,6 +3,7 @@ import { exampleApi } from '../api/exampleApi';
 import { healthApi } from '../api/healthApi';
 import { metricsApi, SystemMetrics } from '../api/metricsApi';
 import type { Example, HealthResponse } from '../api/types';
+import { AdminUsersPanel } from '../components/AdminUsersPanel';
 import { Header } from '../components/Header';
 import { MetricCard } from '../components/MetricCard';
 import { useAuth } from '../context/AuthContext';
@@ -235,6 +236,13 @@ export function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* Admin Users Panel - only visible for admins */}
+        {user?.role === 'ADMIN' && (
+          <div className="mb-8">
+            <AdminUsersPanel />
+          </div>
+        )}
 
         {/* Metrics Grid */}
         {metrics && (

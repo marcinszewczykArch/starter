@@ -2,6 +2,7 @@ package com.starter.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -76,6 +77,28 @@ public class GlobalExceptionHandler {
         return ErrorResponse.builder()
             .error("EMAIL_SEND_FAILED")
             .message("Failed to send email. Please try again later.")
+            .build();
+    }
+
+    @ExceptionHandler(AdminOperationException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAdminOperationException(AdminOperationException ex) {
+        log.warn("Admin operation denied: {}", ex.getMessage());
+
+        return ErrorResponse.builder()
+            .error("ADMIN_OPERATION_DENIED")
+            .message(ex.getMessage())
+            .build();
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAccessDeniedException(AccessDeniedException ex) {
+        log.warn("Access denied: {}", ex.getMessage());
+
+        return ErrorResponse.builder()
+            .error("ACCESS_DENIED")
+            .message("You do not have permission to access this resource")
             .build();
     }
 

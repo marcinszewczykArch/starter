@@ -48,3 +48,16 @@ export interface ApiError {
   message: string;
   details?: Record<string, string>;
 }
+
+// Admin types
+export interface AdminUser {
+  id: number;
+  email: string;
+  role: 'USER' | 'ADMIN';
+  emailVerified: boolean;
+  createdAt: string;
+}
+
+export interface ChangeRoleRequest {
+  role: 'USER' | 'ADMIN';
+}

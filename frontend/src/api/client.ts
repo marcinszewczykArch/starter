@@ -118,6 +118,22 @@ class ApiClient {
 
     return this.handleResponse<T>(response);
   }
+
+  async patch<T>(endpoint: string, data?: unknown, options?: RequestOptions): Promise<T> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const response = await fetch(url, {
+      ...options,
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...this.getAuthHeaders(),
+        ...options?.headers,
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+
+    return this.handleResponse<T>(response);
+  }
 }
 
 export const apiClient = new ApiClient(API_BASE_URL);

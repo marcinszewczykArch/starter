@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 /** Repository for User entity using JdbcClient. */
@@ -193,6 +194,48 @@ public class UserRepository {
             .param("updatedAt", Timestamp.from(Instant.now()))
             .param("userId", userId)
             .update();
+    }
+
+    /** Find all users ordered by creation date. */
+    public List<User> findAll() {
+        return jdbcClient
+            .sql("SELECT " + SELECT_FIELDS + " FROM users ORDER BY created_at DESC")
+            .query(ROW_MAPPER)
+            .list();
+    }
+
+    /** Update user role. */
+    public void updateRole(Long userId, User.Role role) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET role = :role,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("role", role.name())
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Delete user by ID. */
+    public void deleteById(Long userId) {
+        jdbcClient
+            .sql("DELETE FROM users WHERE id = :userId")
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Count users with a specific role. */
+    public long countByRole(User.Role role) {
+        return jdbcClient
+            .sql("SELECT COUNT(*) FROM users WHERE role = :role")
+            .param("role", role.name())
+            .query(Long.class)
+            .single();
     }
 
     private static final class UserRowMapper implements RowMapper<User> {
