@@ -52,6 +52,11 @@ resource "aws_instance" "app" {
   tags = {
     Name = "${var.app_name}-server"
   }
+
+  # Prevent EC2 replacement when AMI updates
+  lifecycle {
+    ignore_changes = [ami, user_data]
+  }
 }
 
 # Elastic IP for stable address
