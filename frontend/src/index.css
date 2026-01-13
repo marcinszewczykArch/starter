@@ -13,7 +13,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth scrolling */
+/* Smooth scrolling + prevent layout shift from scrollbar */
 html {
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
