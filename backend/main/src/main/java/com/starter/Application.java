@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
-import com.starter.config.EmailConfig;
+import com.starter.core.config.EmailConfig;
 
 @SpringBootApplication
 @EnableConfigurationProperties(EmailConfig.class)

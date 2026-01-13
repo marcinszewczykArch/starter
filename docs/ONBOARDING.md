@@ -260,7 +260,115 @@ System.out.println(encoder.encode("your-password"));
 
 ### Add New Features
 
-See [Architecture Decision Records](./adr/README.md) for architectural context.
+The codebase separates **core framework** from **business features**. See [ADR-008](./adr/adr-008-package-separation.md).
+
+#### Package Structure
+
+```
+Backend: com.starter/
+├── core/      # Don't modify (auth, security, admin, email)
+├── feature/   # Add your features here!
+└── shared/    # Cross-cutting utilities
+
+Frontend: src/
+├── core/      # Don't modify (auth, admin, common UI)
+├── features/  # Add your features here!
+└── shared/    # API client, types, utils
+```
+
+#### Creating a New Feature (Example: "Maps")
+
+**1. Backend**
+
+```bash
+# Create package structure
+mkdir -p backend/main/src/main/java/com/starter/feature/maps/dto
+```
+
+Create files:
+```
+feature/maps/
+├── MapsController.java      # REST endpoints
+├── MapsService.java         # Business logic
+├── MapsRepository.java      # Database access
+├── Location.java            # Entity
+└── dto/
+    ├── LocationDto.java
+    └── CreateLocationRequest.java
+```
+
+**MapsController.java:**
+```java
+package com.starter.feature.maps;
+
+@RestController
+@RequestMapping("/api/v1/maps")
+@RequiredArgsConstructor
+@SecurityRequirement(name = "bearerAuth")
+public class MapsController {
+    private final MapsService mapsService;
+    
+    @GetMapping
+    public List<LocationDto> getLocations(@AuthenticationPrincipal UserPrincipal user) {
+        return mapsService.getLocations(user);
+    }
+}
+```
+
+**2. Frontend**
+
+```bash
+# Create folder structure
+mkdir -p frontend/src/features/maps/{api,components,pages}
+```
+
+Create files:
+```
+features/maps/
+├── api/mapsApi.ts           # API client
+├── components/MapView.tsx   # UI components
+└── pages/MapsPage.tsx       # Page component
+```
+
+**mapsApi.ts:**
+```typescript
+import { apiClient } from '../../../shared/api/client';
+
+export const mapsApi = {
+  getLocations: () => apiClient.get('/api/v1/maps'),
+  createLocation: (data: CreateLocationRequest) => 
+    apiClient.post('/api/v1/maps', data),
+};
+```
+
+**3. Add Route in App.tsx:**
+```tsx
+import { MapsPage } from './features/maps/pages/MapsPage';
+
+// In Routes:
+<Route path="/maps" element={<ProtectedRoute><MapsPage /></ProtectedRoute>} />
+```
+
+**4. Add Tests**
+
+```bash
+# Backend tests
+mkdir -p backend/main/src/test/java/com/starter/feature/maps
+```
+
+Create:
+- `MapsServiceTest.java` (unit test)
+- `MapsControllerIntegrationTest.java` (integration test)
+
+**5. Run & Verify**
+
+```bash
+./scripts/lint.sh    # Format code
+./scripts/test.sh    # Run tests
+./scripts/dev.sh     # Start app
+```
+
+See [Architecture Decision Records](./adr/README.md) for more architectural context.
 
 ---
 
@@ -331,6 +439,10 @@ docker compose ps         # Check status
 
 | File | Purpose |
 |------|---------|
+| `backend/.../com/starter/core/` | Framework skeleton (auth, security) |
+| `backend/.../com/starter/feature/` | Business features (add yours here!) |
+| `frontend/src/core/` | Frontend skeleton (auth, admin, common) |
+| `frontend/src/features/` | Frontend features (add yours here!) |
 | `infra/terraform/` | Infrastructure as Code |
 | `.github/workflows/ci.yml` | CI/CD Pipeline |
 | `infra/docker-compose.prod.yml` | Production containers |

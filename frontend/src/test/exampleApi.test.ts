@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { exampleApi } from '../api/exampleApi';
-import type { Example } from '../api/types';
+import { exampleApi } from '../features/example/api/exampleApi';
+import type { Example } from '../shared/api/types';
 
 describe('exampleApi', () => {
   const mockExample: Example = {

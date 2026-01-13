@@ -1,14 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { LandingPage } from './pages/LandingPage';
-import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { Dashboard } from './pages/Dashboard';
-import VerifyEmailPage from './pages/VerifyEmailPage';
-import { VerificationPendingPage } from './pages/VerificationPendingPage';
-import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { AuthProvider, useAuth } from './core/auth/context/AuthContext';
+import { ProtectedRoute } from './core/auth/components/ProtectedRoute';
+import { LandingPage } from './core/common/pages/LandingPage';
+import { LoginPage } from './core/auth/pages/LoginPage';
+import { RegisterPage } from './core/auth/pages/RegisterPage';
+import { Dashboard } from './core/user/pages/Dashboard';
+import VerifyEmailPage from './core/auth/pages/VerifyEmailPage';
+import { VerificationPendingPage } from './core/auth/pages/VerificationPendingPage';
+import { ForgotPasswordPage } from './core/auth/pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './core/auth/pages/ResetPasswordPage';
 
 function AppRoutes() {
   const { isAuthenticated, isLoading, user } = useAuth();

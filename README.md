@@ -31,51 +31,77 @@ That's it! The application will be available at:
 ```
 starter/
 ├── backend/                    # Java/Spring Boot backend
-│   └── main/                   # Main application module
-│       ├── src/main/java/
-│       │   └── com/starter/
-│       │       ├── config/     # Configuration classes
-│       │       ├── controller/ # REST controllers
-│       │       ├── domain/     # Domain entities (User, Example)
-│       │       ├── dto/        # Data Transfer Objects
-│       │       ├── exception/  # Custom exceptions
-│       │       ├── repository/ # Database repositories
-│       │       ├── security/   # JWT, filters, UserPrincipal
-│       │       └── service/    # Business logic
-│       └── src/main/resources/
-│           └── db/migration/   # Flyway migrations
+│   └── main/
+│       └── src/main/java/com/starter/
+│           ├── core/           # 🔧 Framework skeleton (don't modify often)
+│           │   ├── auth/       # Authentication (login, register, JWT)
+│           │   ├── user/       # User entity, repository, service
+│           │   ├── admin/      # Admin panel (user management)
+│           │   ├── email/      # Email service (Resend)
+│           │   ├── security/   # JWT utils, filters, UserPrincipal
+│           │   ├── config/     # Spring configuration
+│           │   ├── exception/  # Global exception handlers
+│           │   └── common/dto/ # Shared DTOs (MessageResponse, etc.)
+│           ├── feature/        # 🚀 Business features (add your code here!)
+│           │   └── example/    # Example feature (template for new features)
+│           └── shared/         # Shared utilities (if needed)
 ├── frontend/                   # React/Vite frontend
 │   └── src/
-│       ├── api/                # API client + auth API
-│       ├── components/         # Shared components (Header, etc.)
-│       ├── context/            # React Context (AuthContext)
-│       ├── pages/              # Page components (Dashboard, Login, etc.)
-│       ├── utils/              # Utility functions
-│       └── test/               # Test files
+│       ├── core/               # 🔧 Framework skeleton
+│       │   ├── auth/           # Login, register, password reset
+│       │   ├── admin/          # Admin panel components
+│       │   ├── user/           # Dashboard, user pages
+│       │   └── common/         # Header, Logo, shared components
+│       ├── features/           # 🚀 Business features (add your code here!)
+│       │   └── example/        # Example feature (template)
+│       └── shared/             # API client, types, utilities
 ├── infra/                      # Infrastructure files
-│   ├── docker-compose.dev.yml  # Dev database (port 5432)
-│   ├── docker-compose.test.yml # Test database (port 5433)
-│   ├── docker-compose.prod.yml # Production (EC2)
-│   ├── Dockerfile.backend      # Backend Docker image (used by CI)
-│   ├── Dockerfile.frontend     # Frontend Docker image (used by CI)
-│   ├── nginx.conf              # Nginx config (local)
-│   ├── nginx.prod.conf         # Nginx config (production)
-│   ├── monitoring/             # Monitoring stack config
-│   │   ├── prometheus.yml      # Prometheus scrape config
-│   │   ├── promtail.yml        # Log collection config
-│   │   └── grafana/            # Grafana provisioning
+│   ├── docker-compose.*.yml    # Docker configs (dev/test/prod)
+│   ├── Dockerfile.*            # Docker images
+│   ├── nginx.*.conf            # Nginx configs
+│   ├── monitoring/             # Prometheus, Grafana, Loki
 │   └── terraform/              # AWS infrastructure (EC2 Spot)
 ├── scripts/                    # Utility scripts
 │   ├── dev.sh                  # Start dev environment
 │   ├── lint.sh                 # Lint & format (run before commit)
 │   └── test.sh                 # Run all tests
-├── requests/                   # HTTP client requests (IntelliJ)
-├── config/                     # Shared config
-│   └── code-format.xml         # Eclipse formatter config
-└── .github/
-    └── workflows/
-        └── ci.yml              # GitHub Actions CI/CD (tests + deploy)
+├── docs/                       # Documentation
+│   ├── adr/                    # Architecture Decision Records
+│   └── ONBOARDING.md           # New developer guide
+└── .github/workflows/ci.yml    # CI/CD pipeline
 ```
+
+### Package Separation (Core vs Feature)
+
+The codebase is organized to separate **framework code** from **business logic**:
+
+| Layer | Purpose | When to modify |
+|-------|---------|----------------|
+| `core/` | Authentication, security, admin, email | Rarely - only for framework changes |
+| `feature/` | Business logic (your app's features) | Often - this is where you build |
+| `shared/` | Utilities used by multiple features | As needed |
+
+**Adding a new feature** (e.g., "maps"):
+
+```
+# Backend
+feature/maps/
+├── MapsController.java
+├── MapsService.java
+├── MapsRepository.java
+├── Location.java           # Entity
+└── dto/
+    ├── LocationDto.java
+    └── CreateLocationRequest.java
+
+# Frontend
+features/maps/
+├── api/mapsApi.ts
+├── components/MapView.tsx
+└── pages/MapsPage.tsx
+```
+
+See [ADR-008](docs/adr/adr-008-package-separation.md) for the architectural decision behind this structure.
 
 ## 🛠 Available Commands
 
