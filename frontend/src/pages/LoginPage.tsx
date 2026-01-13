@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LogoBrand } from '../components/LogoBrand';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -34,9 +35,7 @@ export function LoginPage() {
       {/* Header */}
       <header className="border-b border-gray-200 bg-white">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <Link to="/" className="flex items-center gap-3">
-            <span className="text-xl font-semibold text-gray-900">Starter</span>
-          </Link>
+          <LogoBrand />
         </div>
       </header>
 

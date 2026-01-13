@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AdminOnly } from './AdminOnly';
-import { Logo } from './Logo';
+import { LogoBrand } from './LogoBrand';
 
 export function Header() {
   const { user, token, isAuthenticated, logout } = useAuth();
@@ -29,12 +29,7 @@ export function Header() {
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2">
-            <Logo size={28} />
-            <span className="text-xl font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Starter
-            </span>
-          </Link>
+          <LogoBrand to={isAuthenticated ? '/dashboard' : '/'} />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
