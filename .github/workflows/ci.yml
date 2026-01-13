@@ -187,8 +187,8 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/starter-backend:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/starter-backend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,ignore-error=true
+          cache-to: type=gha,mode=max,ignore-error=true
 
   build-and-push-frontend:
     name: Build & Push Frontend
@@ -226,8 +226,8 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/starter-frontend:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.OWNER_LC }}/starter-frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,ignore-error=true
+          cache-to: type=gha,mode=max,ignore-error=true
 
   # ===========================================================================
   # STAGE 4: DEPLOY - Pull images and deploy to EC2 (master only)
