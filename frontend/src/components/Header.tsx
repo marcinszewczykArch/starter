@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { AdminOnly } from './AdminOnly';
+import { Logo } from './Logo';
 
 export function Header() {
   const { user, token, isAuthenticated, logout } = useAuth();
@@ -29,9 +30,9 @@ export function Header() {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link to={isAuthenticated ? '/dashboard' : '/'} className="flex items-center gap-2">
-            <span className="text-xl font-semibold text-gray-900">Starter</span>
-            <span className="text-xs text-gray-400 border border-gray-200 rounded px-2 py-0.5 hidden sm:inline">
-              v0.0.1
+            <Logo size={28} />
+            <span className="text-xl font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              Starter
             </span>
           </Link>
 
