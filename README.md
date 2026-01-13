@@ -319,6 +319,30 @@ sequenceDiagram
     F->>F: Redirect to /login
 ```
 
+### Change Password Flow (Authenticated)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+
+    U->>F: Click "Change Password" in Dashboard
+    F-->>U: Show modal (current + new password)
+    
+    U->>F: Submit passwords
+    F->>F: Validate (match, length, different)
+    F->>B: POST /api/auth/change-password<br/>Authorization: Bearer {token}
+    B->>B: Verify current password (BCrypt)
+    B->>B: Check new ≠ current
+    B->>B: Hash & save new password
+    B-->>F: Success
+    
+    F->>F: Logout (clear token)
+    F->>F: Redirect to /login
+    F-->>U: "Password changed! Please log in again."
+```
+
 ### API Endpoints
 
 | Endpoint | Method | Auth | Description |
@@ -330,6 +354,7 @@ sequenceDiagram
 | `/api/auth/resend-verification` | POST | ❌ | Resend verification email |
 | `/api/auth/forgot-password` | POST | ❌ | Request password reset |
 | `/api/auth/reset-password` | POST | ❌ | Reset password with token |
+| `/api/auth/change-password` | POST | ✅ | Change password (logged in) |
 | `/api/examples` | GET | ✅ | List examples (filtered by user) |
 | `/api/examples` | POST | ✅ | Create new example |
 

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogoBrand } from '../components/LogoBrand';
+import { Header } from '../components/Header';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,6 +14,7 @@ export function LoginPage() {
   const location = useLocation();
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
+  const successMessage = (location.state as { message?: string })?.message;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,12 +33,7 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <LogoBrand />
-        </div>
-      </header>
+      <Header />
 
       {/* Login Form */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
@@ -49,6 +45,11 @@ export function LoginPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              {successMessage && (
+                <div className="bg-green-50 text-green-700 px-4 py-3 rounded-lg text-sm">
+                  {successMessage}
+                </div>
+              )}
               {error && (
                 <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
               )}

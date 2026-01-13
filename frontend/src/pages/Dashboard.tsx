@@ -1,16 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { exampleApi } from '../api/exampleApi';
 import { healthApi } from '../api/healthApi';
 import { metricsApi, SystemMetrics } from '../api/metricsApi';
 import type { Example, HealthResponse } from '../api/types';
 import { AdminUsersPanel } from '../components/AdminUsersPanel';
+import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { Header } from '../components/Header';
 import { MetricCard } from '../components/MetricCard';
 import { useAuth } from '../context/AuthContext';
 import { formatBytes } from '../utils/format';
 
 export function Dashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [examples, setExamples] = useState<Example[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +25,18 @@ export function Dashboard() {
   const [newName, setNewName] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [creating, setCreating] = useState(false);
+
+  // Change password modal
+  const [showChangePassword, setShowChangePassword] = useState(false);
+
+  const handlePasswordChanged = () => {
+    setShowChangePassword(false);
+    // Logout and redirect to login
+    logout();
+    navigate('/login', {
+      state: { message: 'Password changed successfully. Please log in again.' },
+    });
+  };
 
   const fetchExamples = useCallback(async () => {
     try {
@@ -237,6 +252,35 @@ export function Dashboard() {
           )}
         </div>
 
+        {/* Account Settings */}
+        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Account Settings</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-500">Email</p>
+              <p className="font-medium text-gray-900">{user?.email}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Role</p>
+              <p className="font-medium text-gray-900">{user?.role}</p>
+            </div>
+            <button
+              onClick={() => setShowChangePassword(true)}
+              className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
+              </svg>
+              Change Password
+            </button>
+          </div>
+        </div>
+
         {/* Admin Users Panel - only visible for admins */}
         {user?.role === 'ADMIN' && (
           <div className="mb-8">
@@ -285,6 +329,13 @@ export function Dashboard() {
           </div>
         )}
       </main>
+
+      {/* Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+        onSuccess={handlePasswordChanged}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.starter.dto.AuthResponse;
+import com.starter.dto.ChangePasswordRequest;
 import com.starter.dto.ForgotPasswordRequest;
 import com.starter.dto.LoginRequest;
 import com.starter.dto.MessageResponse;
@@ -91,5 +92,22 @@ public class AuthController {
     public MessageResponse resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         authService.resetPassword(request.getToken(), request.getPassword());
         return MessageResponse.of("Password reset successfully");
+    }
+
+    @PostMapping("/change-password")
+    @Operation(
+        summary = "Change password for authenticated user",
+        security = @SecurityRequirement(name = "bearerAuth")
+    )
+    public MessageResponse changePassword(
+        @Valid @RequestBody ChangePasswordRequest request,
+        @AuthenticationPrincipal UserPrincipal principal
+    ) {
+        authService.changePassword(
+            principal.getId(),
+            request.getCurrentPassword(),
+            request.getNewPassword()
+        );
+        return MessageResponse.of("Password changed successfully");
     }
 }

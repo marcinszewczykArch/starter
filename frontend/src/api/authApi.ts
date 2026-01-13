@@ -115,6 +115,28 @@ class AuthApi {
 
     return response.json();
   }
+
+  async changePassword(
+    token: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<MessageResponse> {
+    const response = await fetch(`${AUTH_URL}/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Change failed' }));
+      throw new Error(error.message || 'Failed to change password');
+    }
+
+    return response.json();
+  }
 }
 
 export const authApi = new AuthApi();

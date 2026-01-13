@@ -140,6 +140,44 @@ public class AuthService {
         log.info("Password reset successful for user: {}", user.getEmail());
     }
 
+    /**
+     * Change password for authenticated user.
+     *
+     * @param userId          ID of the user changing password
+     * @param currentPassword current password for verification
+     * @param newPassword     new password to set
+     * @throws InvalidCredentialsException if current password is incorrect
+     * @throws IllegalArgumentException    if new password same as current
+     */
+    @Transactional
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        log.info("Password change requested for user ID: {}", userId);
+
+        User user =
+            userRepository
+                .findById(userId)
+                .orElseThrow(
+                    () -> {
+                        log.warn("Password change failed: user not found for ID {}", userId);
+                        return new InvalidCredentialsException();
+                    }
+                );
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            log.warn("Password change failed: incorrect current password for user {}", user.getEmail());
+            throw new InvalidCredentialsException("Current password is incorrect");
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            log.warn("Password change failed: new password same as current for user {}", user.getEmail());
+            throw new IllegalArgumentException("New password must be different from current password");
+        }
+
+        String hashedPassword = passwordEncoder.encode(newPassword);
+        userRepository.updatePassword(userId, hashedPassword);
+        log.info("Password changed successfully for user: {}", user.getEmail());
+    }
+
     /** Normalize email to lowercase for consistent storage and lookup. */
     private String normalizeEmail(String email) {
         return email.toLowerCase(java.util.Locale.ROOT).trim();

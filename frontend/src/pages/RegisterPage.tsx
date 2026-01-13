@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogoBrand } from '../components/LogoBrand';
+import { Header } from '../components/Header';
 
 export function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -79,12 +79,7 @@ export function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <LogoBrand />
-        </div>
-      </header>
+      <Header />
 
       {/* Register Form */}
       <main className="flex-1 flex items-center justify-center px-4 py-12">
