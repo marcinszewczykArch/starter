@@ -280,7 +280,7 @@ jobs:
             GRAFANA_ROOT_URL=https://ig4s.pl/grafana
             EMAIL_ENABLED=true
             RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
-            EMAIL_FROM=Starter App <onboarding@resend.dev>
+            EMAIL_FROM=noreply@ig4s.pl
             APP_NAME=Starter App
             APP_BASE_URL=https://ig4s.pl
             BACKEND_IMAGE=ghcr.io/${{ env.OWNER_LC }}/starter-backend:${{ github.sha }}

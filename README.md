@@ -582,6 +582,16 @@ Click **New repository secret** for each:
 | `GRAFANA_PASSWORD` | `GrafanaSecret123!` | Grafana admin password |
 | `RESEND_API_KEY` | `re_xxxxx...` | Resend API key for emails |
 
+**📧 Email Configuration (Resend):**
+
+1. Create account at [resend.com](https://resend.com)
+2. Add your domain in **Domains** → **Add Domain**
+3. Add DNS records (DKIM, SPF, DMARC) to your domain provider
+4. Wait for verification (usually a few minutes)
+5. Copy API key from **API Keys** and add as `RESEND_API_KEY` secret
+
+Sender email is configured in `application.yml` (`app.email.from-address`).
+
 **🔑 Generate `JWT_SECRET`:**
 
 ```bash

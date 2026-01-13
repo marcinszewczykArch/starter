@@ -37,7 +37,7 @@ app:
   email:
     enabled: ${EMAIL_ENABLED:true}
     api-key: ${RESEND_API_KEY:}
-    from-address: ${EMAIL_FROM:Starter App <onboarding@resend.dev>}
+    from-address: ${EMAIL_FROM:noreply@ig4s.pl}
     app-name: ${APP_NAME:Starter App}
     base-url: ${APP_BASE_URL:http://localhost:5173}
 
