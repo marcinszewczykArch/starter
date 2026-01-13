@@ -15,12 +15,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.starter.core.auth.dto.AuthResponse;
 import com.starter.core.auth.dto.LoginRequest;
 import com.starter.core.auth.dto.RegisterRequest;
+import com.starter.core.config.SecurityTokenConfig;
 import com.starter.core.email.EmailService;
 import com.starter.core.exception.InvalidCredentialsException;
 import com.starter.core.security.JwtUtil;
 import com.starter.core.user.User;
 import com.starter.core.user.UserRepository;
 import com.starter.core.user.UserService;
+import com.starter.shared.util.TokenGenerator;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -47,6 +49,12 @@ class AuthServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private TokenGenerator tokenGenerator;
+
+    @Mock
+    private SecurityTokenConfig securityTokenConfig;
+
     private AuthService authService;
 
     @BeforeEach
@@ -58,7 +66,9 @@ class AuthServiceTest {
                 passwordEncoder,
                 jwtUtil,
                 emailVerificationService,
-                emailService
+                emailService,
+                tokenGenerator,
+                securityTokenConfig
             );
     }
 

@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.starter.core.auth.dto.AuthResponse;
 import com.starter.core.auth.dto.LoginRequest;
 import com.starter.core.auth.dto.RegisterRequest;
+import com.starter.core.config.SecurityTokenConfig;
 import com.starter.core.email.EmailService;
 import com.starter.core.exception.InvalidCredentialsException;
 import com.starter.core.exception.InvalidTokenException;
@@ -16,11 +17,10 @@ import com.starter.core.security.JwtUtil;
 import com.starter.core.user.User;
 import com.starter.core.user.UserRepository;
 import com.starter.core.user.UserService;
+import com.starter.shared.util.TokenGenerator;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 
 /** Service for authentication operations. */
 @Slf4j
@@ -28,16 +28,14 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final int TOKEN_LENGTH = 32;
-    private static final int PASSWORD_RESET_EXPIRATION_HOURS = 1;
-
     private final UserService userService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final EmailVerificationService emailVerificationService;
     private final EmailService emailService;
-    private final SecureRandom secureRandom = new SecureRandom();
+    private final TokenGenerator tokenGenerator;
+    private final SecurityTokenConfig securityTokenConfig;
 
     /** Register a new user and send verification email. */
     @Transactional
@@ -107,9 +105,9 @@ public class AuthService {
             .findByEmail(normalizedEmail)
             .ifPresentOrElse(
                 user -> {
-                    String token = generateToken();
-                    Instant expiresAt =
-                        Instant.now().plus(PASSWORD_RESET_EXPIRATION_HOURS, ChronoUnit.HOURS);
+                    String token = tokenGenerator.generate();
+                    Instant expiresAt = Instant.now()
+                        .plus(securityTokenConfig.getPasswordResetExpirationHours(), ChronoUnit.HOURS);
                     userRepository.updatePasswordResetToken(user.getId(), token, expiresAt);
                     emailService.sendPasswordResetEmail(user.getEmail(), token);
                     log.info("Password reset email sent to: {}", normalizedEmail);
@@ -183,11 +181,5 @@ public class AuthService {
     /** Normalize email to lowercase for consistent storage and lookup. */
     private String normalizeEmail(String email) {
         return email.toLowerCase(java.util.Locale.ROOT).trim();
-    }
-
-    private String generateToken() {
-        byte[] bytes = new byte[TOKEN_LENGTH];
-        secureRandom.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }

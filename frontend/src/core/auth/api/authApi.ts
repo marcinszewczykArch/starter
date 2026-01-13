@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../../../shared/api/config';
+import { apiClient, ApiClientError } from '../../../shared/api/client';
 import type {
   AuthResponse,
   LoginRequest,
@@ -7,142 +7,126 @@ import type {
   User,
 } from '../../../shared/api/types';
 
-const AUTH_URL = `${API_BASE_URL}/api/auth`;
+const AUTH_PATH = '/api/auth';
 
-class AuthApi {
-  async login(request: LoginRequest): Promise<AuthResponse> {
-    const response = await fetch(`${AUTH_URL}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    });
+/** Options for public (unauthenticated) endpoints */
+const publicOptions = { skipAuth: true };
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Login failed' }));
-      throw new Error(error.message || 'Invalid credentials');
+/**
+ * Extracts user-friendly error message from API errors.
+ * Handles validation errors by returning the first field error.
+ */
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiClientError) {
+    // Handle validation errors - return first field error
+    if (error.details) {
+      const firstError = Object.values(error.details)[0];
+      if (firstError) return firstError;
     }
-
-    return response.json();
+    return error.message;
   }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return fallback;
+}
+
+export const authApi = {
+  async login(request: LoginRequest): Promise<AuthResponse> {
+    try {
+      return await apiClient.post<AuthResponse>(`${AUTH_PATH}/login`, request, publicOptions);
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Invalid credentials'));
+    }
+  },
 
   async register(request: RegisterRequest): Promise<AuthResponse> {
-    const response = await fetch(`${AUTH_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Registration failed' }));
-      if (error.error === 'EMAIL_ALREADY_EXISTS') {
+    try {
+      return await apiClient.post<AuthResponse>(`${AUTH_PATH}/register`, request, publicOptions);
+    } catch (error) {
+      if (error instanceof ApiClientError && error.errorCode === 'EMAIL_ALREADY_EXISTS') {
         throw new Error('Email already registered');
       }
-      if (error.details) {
-        const firstError = Object.values(error.details)[0];
-        throw new Error(firstError as string);
-      }
-      throw new Error(error.message || 'Registration failed');
+      throw new Error(getErrorMessage(error, 'Registration failed'));
     }
-
-    return response.json();
-  }
+  },
 
   async getCurrentUser(token: string): Promise<User> {
-    const response = await fetch(`${AUTH_URL}/me`, {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to get current user');
+    // Pass token explicitly for this call (used during token verification)
+    try {
+      return await apiClient.get<User>(`${AUTH_PATH}/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+        skipAuth: true, // We're passing token manually
+      });
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Failed to get current user'));
     }
-
-    return response.json();
-  }
+  },
 
   async verifyEmail(token: string): Promise<MessageResponse> {
-    const response = await fetch(`${AUTH_URL}/verify-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Verification failed' }));
-      throw new Error(error.message || 'Invalid or expired token');
+    try {
+      return await apiClient.post<MessageResponse>(
+        `${AUTH_PATH}/verify-email`,
+        { token },
+        publicOptions
+      );
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Invalid or expired token'));
     }
-
-    return response.json();
-  }
+  },
 
   async resendVerification(email: string): Promise<MessageResponse> {
-    const response = await fetch(`${AUTH_URL}/resend-verification`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to resend' }));
-      throw new Error(error.message || 'Failed to resend verification email');
+    try {
+      return await apiClient.post<MessageResponse>(
+        `${AUTH_PATH}/resend-verification`,
+        { email },
+        publicOptions
+      );
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Failed to resend verification email'));
     }
-
-    return response.json();
-  }
+  },
 
   async forgotPassword(email: string): Promise<MessageResponse> {
-    const response = await fetch(`${AUTH_URL}/forgot-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed' }));
-      throw new Error(error.message || 'Failed to send reset email');
+    try {
+      return await apiClient.post<MessageResponse>(
+        `${AUTH_PATH}/forgot-password`,
+        { email },
+        publicOptions
+      );
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Failed to send reset email'));
     }
-
-    return response.json();
-  }
+  },
 
   async resetPassword(token: string, password: string): Promise<MessageResponse> {
-    const response = await fetch(`${AUTH_URL}/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, password }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Reset failed' }));
-      throw new Error(error.message || 'Invalid or expired token');
+    try {
+      return await apiClient.post<MessageResponse>(
+        `${AUTH_PATH}/reset-password`,
+        { token, password },
+        publicOptions
+      );
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Invalid or expired token'));
     }
-
-    return response.json();
-  }
+  },
 
   async changePassword(
     token: string,
     currentPassword: string,
     newPassword: string
   ): Promise<MessageResponse> {
-    const response = await fetch(`${AUTH_URL}/change-password`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Change failed' }));
-      throw new Error(error.message || 'Failed to change password');
+    try {
+      return await apiClient.post<MessageResponse>(
+        `${AUTH_PATH}/change-password`,
+        { currentPassword, newPassword },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          skipAuth: true, // We're passing token manually
+        }
+      );
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Failed to change password'));
     }
-
-    return response.json();
-  }
-}
-
-export const authApi = new AuthApi();
+  },
+};

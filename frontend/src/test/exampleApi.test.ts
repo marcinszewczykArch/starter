@@ -39,10 +39,10 @@ describe('exampleApi', () => {
       vi.mocked(global.fetch).mockResolvedValueOnce({
         ok: false,
         status: 500,
-        text: async () => 'Internal Server Error',
+        json: async () => ({ error: 'SERVER_ERROR', message: 'Internal Server Error' }),
       } as Response);
 
-      await expect(exampleApi.getAll()).rejects.toThrow('API Error: 500');
+      await expect(exampleApi.getAll()).rejects.toThrow('Internal Server Error');
     });
   });
 });

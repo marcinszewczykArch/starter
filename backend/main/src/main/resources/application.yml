@@ -40,6 +40,13 @@ app:
     from-address: ${EMAIL_FROM:noreply@ig4s.pl}
     app-name: ${APP_NAME:Starter App}
     base-url: ${APP_BASE_URL:http://localhost:5173}
+  security:
+    # Password reset token expiration (hours)
+    password-reset-expiration-hours: 1
+    # Email verification token expiration (hours)
+    email-verification-expiration-hours: 24
+    # Cooldown before resending verification email (minutes)
+    resend-verification-cooldown-minutes: 5
 
 # JWT Configuration
 jwt:

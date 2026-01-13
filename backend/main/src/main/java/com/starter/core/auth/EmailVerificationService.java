@@ -5,15 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.starter.core.config.SecurityTokenConfig;
 import com.starter.core.email.EmailService;
 import com.starter.core.exception.InvalidTokenException;
 import com.starter.core.user.User;
 import com.starter.core.user.UserRepository;
+import com.starter.shared.util.TokenGenerator;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 
 /** Service for email verification operations. */
 @Slf4j
@@ -21,13 +21,10 @@ import java.util.Base64;
 @RequiredArgsConstructor
 public class EmailVerificationService {
 
-    private static final int TOKEN_LENGTH = 32;
-    private static final int TOKEN_EXPIRATION_HOURS = 24;
-    private static final int RESEND_COOLDOWN_MINUTES = 5;
-
     private final UserRepository userRepository;
     private final EmailService emailService;
-    private final SecureRandom secureRandom = new SecureRandom();
+    private final TokenGenerator tokenGenerator;
+    private final SecurityTokenConfig securityTokenConfig;
 
     /**
      * Generate a verification token and send verification email.
@@ -37,8 +34,9 @@ public class EmailVerificationService {
      */
     @Transactional
     public String sendVerificationEmail(User user) {
-        String token = generateToken();
-        Instant expiresAt = Instant.now().plus(TOKEN_EXPIRATION_HOURS, ChronoUnit.HOURS);
+        String token = tokenGenerator.generate();
+        Instant expiresAt = Instant.now()
+            .plus(securityTokenConfig.getEmailVerificationExpirationHours(), ChronoUnit.HOURS);
 
         userRepository.updateVerificationToken(user.getId(), token, expiresAt);
         emailService.sendVerificationEmail(user.getEmail(), token);
@@ -100,24 +98,21 @@ public class EmailVerificationService {
 
         // Check cooldown - prevent spam
         if (user.getVerificationTokenExpiresAt() != null) {
+            int expirationHours = securityTokenConfig.getEmailVerificationExpirationHours();
+            int cooldownMinutes = securityTokenConfig.getResendVerificationCooldownMinutes();
+
             Instant cooldownEnd = user.getVerificationTokenExpiresAt()
-                .minus(TOKEN_EXPIRATION_HOURS, ChronoUnit.HOURS)
-                .plus(RESEND_COOLDOWN_MINUTES, ChronoUnit.MINUTES);
+                .minus(expirationHours, ChronoUnit.HOURS)
+                .plus(cooldownMinutes, ChronoUnit.MINUTES);
 
             if (Instant.now().isBefore(cooldownEnd)) {
                 log.warn("Resend verification rate limited for email: {}", email);
                 throw new InvalidTokenException(
-                    "Please wait " + RESEND_COOLDOWN_MINUTES + " minutes before requesting another email"
+                    "Please wait " + cooldownMinutes + " minutes before requesting another email"
                 );
             }
         }
 
         sendVerificationEmail(user);
-    }
-
-    private String generateToken() {
-        byte[] bytes = new byte[TOKEN_LENGTH];
-        secureRandom.nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }
