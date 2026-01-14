@@ -96,10 +96,14 @@ export function UserDetailsModal({
     if (entry.city && entry.country) {
       return `${entry.city}, ${entry.country}`;
     }
-    if (entry.latitude && entry.longitude) {
+    return 'Unknown';
+  };
+
+  const getCoordinatesDisplay = (entry: LoginHistoryEntry) => {
+    if (entry.latitude != null && entry.longitude != null) {
       return `${entry.latitude.toFixed(4)}, ${entry.longitude.toFixed(4)}`;
     }
-    return 'Unknown';
+    return '-';
   };
 
   const isOwnAccount = user.id === currentUserId;
@@ -110,7 +114,7 @@ export function UserDetailsModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h2 className="text-xl font-semibold text-gray-900">User Details</h2>
@@ -194,6 +198,7 @@ export function UserDetailsModal({
                       <tr className="text-left text-gray-500 border-b">
                         <th className="pb-2 font-medium">Date</th>
                         <th className="pb-2 font-medium">Location</th>
+                        <th className="pb-2 font-medium">Coordinates</th>
                         <th className="pb-2 font-medium">Source</th>
                         <th className="pb-2 font-medium">Device</th>
                         <th className="pb-2 font-medium">Status</th>
@@ -206,6 +211,9 @@ export function UserDetailsModal({
                             {formatRelativeTime(entry.loggedInAt)}
                           </td>
                           <td className="py-2 text-gray-600">{getLocationDisplay(entry)}</td>
+                          <td className="py-2 text-gray-500 font-mono text-xs">
+                            {getCoordinatesDisplay(entry)}
+                          </td>
                           <td className="py-2">
                             {entry.locationSource === 'GPS' ? (
                               <span className="text-green-600">🛰️ GPS</span>
