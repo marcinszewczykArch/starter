@@ -62,7 +62,9 @@ public class AuthController {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
             // X-Forwarded-For can contain multiple IPs, first one is the client
-            return xForwardedFor.split(",")[0].trim();
+            int commaIndex = xForwardedFor.indexOf(',');
+            String firstIp = commaIndex > 0 ? xForwardedFor.substring(0, commaIndex) : xForwardedFor;
+            return firstIp.trim();
         }
 
         String xRealIp = request.getHeader("X-Real-IP");
