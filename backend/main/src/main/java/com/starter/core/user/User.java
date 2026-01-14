@@ -23,6 +23,7 @@ public class User {
     private Instant verificationTokenExpiresAt;
     private String passwordResetToken;
     private Instant passwordResetTokenExpiresAt;
+    private Instant lastLoginAt;
     private Instant createdAt;
     private Instant updatedAt;
 

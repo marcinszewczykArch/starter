@@ -13,11 +13,14 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.starter.core.admin.dto.AdminUserDto;
 import com.starter.core.admin.dto.ChangeRoleRequest;
+import com.starter.core.admin.dto.LoginHistoryDto;
+import com.starter.core.admin.dto.LoginHistoryPageDto;
 import com.starter.core.security.UserPrincipal;
 
 import jakarta.validation.Valid;
@@ -34,6 +37,7 @@ import java.util.List;
 public class AdminController {
 
     private final AdminService adminService;
+    private final LoginHistoryService loginHistoryService;
 
     @GetMapping("/users")
     @Operation(summary = "Get all users")
@@ -59,5 +63,25 @@ public class AdminController {
         @AuthenticationPrincipal UserPrincipal principal
     ) {
         adminService.deleteUser(id, principal.getId());
+    }
+
+    @GetMapping("/users/{id}/logins")
+    @Operation(summary = "Get login history for a user")
+    public LoginHistoryPageDto getLoginHistory(
+        @PathVariable Long id,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        List<LoginHistory> history = loginHistoryService.getLoginHistory(id, page, size);
+        long totalElements = loginHistoryService.getLoginHistoryCount(id);
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return LoginHistoryPageDto.builder()
+            .content(history.stream().map(LoginHistoryDto::fromEntity).toList())
+            .totalElements(totalElements)
+            .totalPages(totalPages)
+            .page(page)
+            .size(size)
+            .build();
     }
 }

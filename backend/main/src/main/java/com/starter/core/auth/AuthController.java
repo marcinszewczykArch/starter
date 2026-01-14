@@ -26,6 +26,7 @@ import com.starter.core.common.dto.MessageResponse;
 import com.starter.core.security.UserPrincipal;
 import com.starter.core.user.dto.UserResponse;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 /** REST controller for authentication endpoints. */
@@ -47,8 +48,29 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Login with email and password")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-        return authService.login(request);
+    public AuthResponse login(
+        @Valid @RequestBody LoginRequest request,
+        HttpServletRequest httpRequest
+    ) {
+        String ipAddress = getClientIpAddress(httpRequest);
+        String userAgent = httpRequest.getHeader("User-Agent");
+        return authService.login(request, ipAddress, userAgent);
+    }
+
+    /** Extract client IP address, handling proxies (X-Forwarded-For, X-Real-IP). */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            // X-Forwarded-For can contain multiple IPs, first one is the client
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty()) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
     }
 
     @GetMapping("/me")

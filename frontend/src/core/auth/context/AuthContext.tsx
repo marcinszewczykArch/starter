@@ -9,6 +9,8 @@ import {
 } from 'react';
 import { authApi } from '../api/authApi';
 import { setAuthErrorHandler } from '../../../shared/api/client';
+import { FEATURES } from '../../../shared/api/config';
+import { requestGpsLocation } from '../../../shared/utils/geolocation';
 import type { User, LoginRequest, RegisterRequest } from '../../../shared/api/types';
 
 interface AuthContextType {
@@ -71,7 +73,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [token]);
 
   const login = useCallback(async (request: LoginRequest) => {
-    const response = await authApi.login(request);
+    // Request GPS location if enabled (non-blocking, 3s timeout)
+    const location = FEATURES.gpsEnabled ? await requestGpsLocation(3000) : null;
+
+    // Add location to request if available
+    const loginRequest: LoginRequest = {
+      ...request,
+      location: location ?? undefined,
+    };
+
+    const response = await authApi.login(loginRequest);
     const newUser: User = {
       id: response.userId,
       email: response.email,

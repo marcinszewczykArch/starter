@@ -20,6 +20,7 @@ public class AdminUserDto {
     private String email;
     private String role;
     private boolean emailVerified;
+    private Instant lastLoginAt;
     private Instant createdAt;
 
     /** Create AdminUserDto from User entity. */
@@ -29,6 +30,7 @@ public class AdminUserDto {
             .email(user.getEmail())
             .role(user.getRole().name())
             .emailVerified(user.isEmailVerified())
+            .lastLoginAt(user.getLastLoginAt())
             .createdAt(user.getCreatedAt())
             .build();
     }

@@ -24,7 +24,7 @@ public class UserRepository {
     private static final String SELECT_FIELDS =
         "id, email, password, role, email_verified, verification_token, "
             + "verification_token_expires_at, password_reset_token, "
-            + "password_reset_token_expires_at, created_at, updated_at";
+            + "password_reset_token_expires_at, last_login_at, created_at, updated_at";
 
     /** Find user by email. */
     public Optional<User> findByEmail(String email) {
@@ -236,11 +236,21 @@ public class UserRepository {
             .single();
     }
 
+    /** Update last login timestamp for a user. */
+    public void updateLastLoginAt(Long userId, Instant lastLoginAt) {
+        jdbcClient
+            .sql("UPDATE users SET last_login_at = :lastLoginAt WHERE id = :userId")
+            .param("lastLoginAt", Timestamp.from(lastLoginAt))
+            .param("userId", userId)
+            .update();
+    }
+
     private static final class UserRowMapper implements RowMapper<User> {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
             Timestamp verificationExpires = rs.getTimestamp("verification_token_expires_at");
             Timestamp passwordResetExpires = rs.getTimestamp("password_reset_token_expires_at");
+            Timestamp lastLogin = rs.getTimestamp("last_login_at");
             return User.builder()
                 .id(rs.getLong("id"))
                 .email(rs.getString("email"))
@@ -255,6 +265,7 @@ public class UserRepository {
                 .passwordResetTokenExpiresAt(
                     passwordResetExpires != null ? passwordResetExpires.toInstant() : null
                 )
+                .lastLoginAt(lastLogin != null ? lastLogin.toInstant() : null)
                 .createdAt(rs.getTimestamp("created_at").toInstant())
                 .updatedAt(rs.getTimestamp("updated_at").toInstant())
                 .build();

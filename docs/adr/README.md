@@ -14,6 +14,7 @@ This directory contains Architecture Decision Records for the Starter applicatio
 | [ADR-006](adr-006-ci-cd-github-actions.md) | CI/CD with GitHub Actions | Accepted |
 | [ADR-007](adr-007-spot-instances.md) | EC2 Spot Instances | Accepted |
 | [ADR-008](adr-008-package-separation.md) | Package Separation (Core vs Feature) | Accepted |
+| [ADR-009](adr-009-login-history-geolocation.md) | Login History and Geolocation Tracking | Accepted |
 
 ## What is an ADR?
 

@@ -1,5 +1,5 @@
 import { apiClient } from '../../../shared/api/client';
-import { AdminUser, ChangeRoleRequest } from '../../../shared/api/types';
+import { AdminUser, ChangeRoleRequest, LoginHistoryPage } from '../../../shared/api/types';
 
 const ADMIN_ENDPOINT = '/api/admin';
 
@@ -25,5 +25,14 @@ export const adminApi = {
    */
   deleteUser: async (userId: number): Promise<void> => {
     await apiClient.delete<void>(`${ADMIN_ENDPOINT}/users/${userId}`);
+  },
+
+  /**
+   * Get login history for a user (admin only)
+   */
+  getLoginHistory: async (userId: number, page = 0, size = 20): Promise<LoginHistoryPage> => {
+    return apiClient.get<LoginHistoryPage>(`${ADMIN_ENDPOINT}/users/${userId}/logins`, {
+      params: { page: String(page), size: String(size) },
+    });
   },
 };

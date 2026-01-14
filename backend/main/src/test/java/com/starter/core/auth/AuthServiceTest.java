@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.starter.core.admin.LoginHistoryService;
 import com.starter.core.auth.dto.AuthResponse;
 import com.starter.core.auth.dto.LoginRequest;
 import com.starter.core.auth.dto.RegisterRequest;
@@ -55,7 +56,13 @@ class AuthServiceTest {
     @Mock
     private SecurityTokenConfig securityTokenConfig;
 
+    @Mock
+    private LoginHistoryService loginHistoryService;
+
     private AuthService authService;
+
+    private static final String TEST_IP = "192.168.1.1";
+    private static final String TEST_USER_AGENT = "Mozilla/5.0 Test";
 
     @BeforeEach
     void setUp() {
@@ -68,7 +75,8 @@ class AuthServiceTest {
                 emailVerificationService,
                 emailService,
                 tokenGenerator,
-                securityTokenConfig
+                securityTokenConfig,
+                loginHistoryService
             );
     }
 
@@ -134,7 +142,7 @@ class AuthServiceTest {
         when(jwtUtil.generateToken(user)).thenReturn("jwt-token");
 
         // when
-        AuthResponse response = authService.login(request);
+        AuthResponse response = authService.login(request, TEST_IP, TEST_USER_AGENT);
 
         // then
         assertThat(response.getToken()).isEqualTo("jwt-token");
@@ -153,7 +161,7 @@ class AuthServiceTest {
         when(userService.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> authService.login(request))
+        assertThatThrownBy(() -> authService.login(request, TEST_IP, TEST_USER_AGENT))
             .isInstanceOf(InvalidCredentialsException.class);
     }
 
@@ -178,7 +186,7 @@ class AuthServiceTest {
         when(passwordEncoder.matches("wrongPassword", "hashedPassword")).thenReturn(false);
 
         // when & then
-        assertThatThrownBy(() -> authService.login(request))
+        assertThatThrownBy(() -> authService.login(request, TEST_IP, TEST_USER_AGENT))
             .isInstanceOf(InvalidCredentialsException.class);
     }
 }

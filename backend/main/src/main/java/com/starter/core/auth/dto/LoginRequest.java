@@ -21,4 +21,7 @@ public class LoginRequest {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    /** Optional GPS location from browser geolocation API. */
+    private LocationDto location;
 }

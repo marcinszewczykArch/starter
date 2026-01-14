@@ -33,9 +33,15 @@ export interface MessageResponse {
   message: string;
 }
 
+export interface LocationDto {
+  latitude: number;
+  longitude: number;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
+  location?: LocationDto;
 }
 
 export interface RegisterRequest {
@@ -55,9 +61,35 @@ export interface AdminUser {
   email: string;
   role: 'USER' | 'ADMIN';
   emailVerified: boolean;
+  lastLoginAt: string | null;
   createdAt: string;
 }
 
 export interface ChangeRoleRequest {
   role: 'USER' | 'ADMIN';
+}
+
+// Login History types
+export interface LoginHistoryEntry {
+  id: number;
+  loggedInAt: string;
+  success: boolean;
+  failureReason: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  locationSource: 'GPS' | 'IP' | null;
+  country: string | null;
+  city: string | null;
+  ipAddress: string | null;
+  deviceType: string | null;
+  browser: string | null;
+  os: string | null;
+}
+
+export interface LoginHistoryPage {
+  content: LoginHistoryEntry[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
 }
