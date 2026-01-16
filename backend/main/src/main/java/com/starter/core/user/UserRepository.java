@@ -24,19 +24,40 @@ public class UserRepository {
     private static final String SELECT_FIELDS =
         "id, email, password, role, email_verified, verification_token, "
             + "verification_token_expires_at, password_reset_token, "
-            + "password_reset_token_expires_at, last_login_at, created_at, updated_at";
+            + "password_reset_token_expires_at, last_login_at, created_at, updated_at, "
+            + "display_name, bio, website, company, location, country, "
+            + "avatar, avatar_content_type, archived_at, "
+            + "pending_email, email_change_token, email_change_token_expires_at";
 
-    /** Find user by email. */
+    /** Find user by email (case-insensitive, active users only). */
     public Optional<User> findByEmail(String email) {
         return jdbcClient
-            .sql("SELECT " + SELECT_FIELDS + " FROM users WHERE email = :email")
+            .sql("SELECT " + SELECT_FIELDS + " FROM users WHERE LOWER(email) = LOWER(:email) AND archived_at IS NULL")
             .param("email", email)
             .query(ROW_MAPPER)
             .optional();
     }
 
-    /** Find user by ID. */
+    /** Find user by email including archived (for reactivation). */
+    public Optional<User> findByEmailIncludingArchived(String email) {
+        return jdbcClient
+            .sql("SELECT " + SELECT_FIELDS + " FROM users WHERE LOWER(email) = LOWER(:email)")
+            .param("email", email)
+            .query(ROW_MAPPER)
+            .optional();
+    }
+
+    /** Find user by ID (active users only). */
     public Optional<User> findById(Long id) {
+        return jdbcClient
+            .sql("SELECT " + SELECT_FIELDS + " FROM users WHERE id = :id AND archived_at IS NULL")
+            .param("id", id)
+            .query(ROW_MAPPER)
+            .optional();
+    }
+
+    /** Find user by ID including archived. */
+    public Optional<User> findByIdIncludingArchived(Long id) {
         return jdbcClient
             .sql("SELECT " + SELECT_FIELDS + " FROM users WHERE id = :id")
             .param("id", id)
@@ -53,11 +74,22 @@ public class UserRepository {
             .optional();
     }
 
-    /** Check if user with email exists. Uses EXISTS for optimal performance. */
+    /** Check if user with email exists (active users only). Uses EXISTS for optimal performance. */
     public boolean existsByEmail(String email) {
         return Boolean.TRUE.equals(
             jdbcClient
-                .sql("SELECT EXISTS(SELECT 1 FROM users WHERE email = :email)")
+                .sql("SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(email) = LOWER(:email) AND archived_at IS NULL)")
+                .param("email", email)
+                .query(Boolean.class)
+                .single()
+        );
+    }
+
+    /** Check if user with email exists including archived. */
+    public boolean existsByEmailIncludingArchived(String email) {
+        return Boolean.TRUE.equals(
+            jdbcClient
+                .sql("SELECT EXISTS(SELECT 1 FROM users WHERE LOWER(email) = LOWER(:email))")
                 .param("email", email)
                 .query(Boolean.class)
                 .single()
@@ -194,10 +226,10 @@ public class UserRepository {
             .update();
     }
 
-    /** Find all users ordered by creation date. */
+    /** Find all users ordered by creation date (active users only). */
     public List<User> findAll() {
         return jdbcClient
-            .sql("SELECT " + SELECT_FIELDS + " FROM users ORDER BY created_at DESC")
+            .sql("SELECT " + SELECT_FIELDS + " FROM users WHERE archived_at IS NULL ORDER BY created_at DESC")
             .query(ROW_MAPPER)
             .list();
     }
@@ -245,12 +277,163 @@ public class UserRepository {
             .update();
     }
 
+    /** Update user profile fields. */
+    public void updateProfile(Long userId, String displayName, String bio, String website, String company, String location, String country) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET display_name = :displayName,
+                        bio = :bio,
+                        website = :website,
+                        company = :company,
+                        location = :location,
+                        country = :country,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("displayName", displayName)
+            .param("bio", bio)
+            .param("website", website)
+            .param("company", company)
+            .param("location", location)
+            .param("country", country)
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Update user avatar. */
+    public void updateAvatar(Long userId, byte[] avatar, String contentType) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET avatar = :avatar,
+                        avatar_content_type = :contentType,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("avatar", avatar)
+            .param("contentType", contentType)
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Delete user avatar. */
+    public void deleteAvatar(Long userId) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET avatar = NULL,
+                        avatar_content_type = NULL,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Soft delete user (set archived_at). */
+    public void archiveUser(Long userId) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET archived_at = :archivedAt,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("archivedAt", Timestamp.from(Instant.now()))
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Reactivate archived user (clear archived_at). */
+    public void reactivateUser(Long userId) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET archived_at = NULL,
+                        email_verified = FALSE,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Set email change token. */
+    public void setEmailChangeToken(Long userId, String newEmail, String token, Instant expiresAt) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET pending_email = :newEmail,
+                        email_change_token = :token,
+                        email_change_token_expires_at = :expiresAt,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("newEmail", newEmail)
+            .param("token", token)
+            .param("expiresAt", expiresAt != null ? Timestamp.from(expiresAt) : null)
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
+    /** Find user by email change token. */
+    public Optional<User> findByEmailChangeToken(String token) {
+        return jdbcClient
+            .sql("SELECT " + SELECT_FIELDS + " FROM users WHERE email_change_token = :token")
+            .param("token", token)
+            .query(ROW_MAPPER)
+            .optional();
+    }
+
+    /** Confirm email change (update email and clear pending fields). */
+    public void confirmEmailChange(Long userId, String newEmail) {
+        jdbcClient
+            .sql(
+                """
+                    UPDATE users
+                    SET email = :newEmail,
+                        pending_email = NULL,
+                        email_change_token = NULL,
+                        email_change_token_expires_at = NULL,
+                        email_verified = TRUE,
+                        updated_at = :updatedAt
+                    WHERE id = :userId
+                    """
+            )
+            .param("newEmail", newEmail)
+            .param("updatedAt", Timestamp.from(Instant.now()))
+            .param("userId", userId)
+            .update();
+    }
+
     private static final class UserRowMapper implements RowMapper<User> {
         @Override
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
             Timestamp verificationExpires = rs.getTimestamp("verification_token_expires_at");
             Timestamp passwordResetExpires = rs.getTimestamp("password_reset_token_expires_at");
             Timestamp lastLogin = rs.getTimestamp("last_login_at");
+            Timestamp archivedAt = rs.getTimestamp("archived_at");
+            Timestamp emailChangeExpires = rs.getTimestamp("email_change_token_expires_at");
+
             return User.builder()
                 .id(rs.getLong("id"))
                 .email(rs.getString("email"))
@@ -268,6 +451,20 @@ public class UserRepository {
                 .lastLoginAt(lastLogin != null ? lastLogin.toInstant() : null)
                 .createdAt(rs.getTimestamp("created_at").toInstant())
                 .updatedAt(rs.getTimestamp("updated_at").toInstant())
+                .displayName(rs.getString("display_name"))
+                .bio(rs.getString("bio"))
+                .website(rs.getString("website"))
+                .company(rs.getString("company"))
+                .location(rs.getString("location"))
+                .country(rs.getString("country"))
+                .avatar(rs.getBytes("avatar"))
+                .avatarContentType(rs.getString("avatar_content_type"))
+                .archivedAt(archivedAt != null ? archivedAt.toInstant() : null)
+                .pendingEmail(rs.getString("pending_email"))
+                .emailChangeToken(rs.getString("email_change_token"))
+                .emailChangeTokenExpiresAt(
+                    emailChangeExpires != null ? emailChangeExpires.toInstant() : null
+                )
                 .build();
         }
     }

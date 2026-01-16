@@ -41,14 +41,29 @@ public class AuthService {
     private final SecurityTokenConfig securityTokenConfig;
     private final LoginHistoryService loginHistoryService;
 
-    /** Register a new user and send verification email. */
+    /** Register a new user and send verification email. Auto-reactivates archived users. */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         String normalizedEmail = normalizeEmail(request.getEmail());
         log.info("Registering user with email: {}", normalizedEmail);
 
-        String hashedPassword = passwordEncoder.encode(request.getPassword());
-        User user = userService.createUser(normalizedEmail, hashedPassword, User.Role.USER);
+        // Check if user exists (including archived) for auto-reactivation
+        User existingUser = userRepository.findByEmailIncludingArchived(normalizedEmail).orElse(null);
+
+        User user;
+        if (existingUser != null && existingUser.getArchivedAt() != null) {
+            // Auto-reactivate archived user
+            log.info("Auto-reactivating archived user: {}", normalizedEmail);
+            String hashedPassword = passwordEncoder.encode(request.getPassword());
+            userRepository.reactivateUser(existingUser.getId());
+            userRepository.updatePassword(existingUser.getId(), hashedPassword);
+            user = userRepository.findById(existingUser.getId())
+                .orElseThrow(() -> new RuntimeException("Failed to reactivate user"));
+        } else {
+            // Create new user
+            String hashedPassword = passwordEncoder.encode(request.getPassword());
+            user = userService.createUser(normalizedEmail, hashedPassword, User.Role.USER);
+        }
 
         // Send verification email
         emailVerificationService.sendVerificationEmail(user);
@@ -203,6 +218,44 @@ public class AuthService {
         String hashedPassword = passwordEncoder.encode(newPassword);
         userRepository.updatePassword(userId, hashedPassword);
         log.info("Password changed successfully for user: {}", user.getEmail());
+    }
+
+    /**
+     * Confirm email change using token.
+     *
+     * @param token Email change verification token
+     * @throws InvalidTokenException if token is invalid or expired
+     */
+    @Transactional
+    public void confirmEmailChange(String token) {
+        User user = userRepository
+            .findByEmailChangeToken(token)
+            .orElseThrow(() -> {
+                log.warn("Invalid email change token attempted");
+                return new InvalidTokenException("Invalid or expired email change token");
+            });
+
+        if (user.getEmailChangeTokenExpiresAt() == null
+            || Instant.now().isAfter(user.getEmailChangeTokenExpiresAt())) {
+            log.warn("Expired email change token for user: {}", user.getEmail());
+            throw new InvalidTokenException("Email change token has expired");
+        }
+
+        if (user.getPendingEmail() == null) {
+            log.warn("No pending email for user: {}", user.getEmail());
+            throw new InvalidTokenException("No pending email change");
+        }
+
+        // Check if new email is already taken (race condition check)
+        if (userRepository.existsByEmailIncludingArchived(user.getPendingEmail())) {
+            log.warn("Email change failed: new email already exists: {}", user.getPendingEmail());
+            throw new InvalidTokenException("Email is already taken");
+        }
+
+        // Update email
+        userRepository.confirmEmailChange(user.getId(), user.getPendingEmail());
+
+        log.info("Email changed successfully for user ID: {} to {}", user.getId(), user.getPendingEmail());
     }
 
     /** Normalize email to lowercase for consistent storage and lookup. */

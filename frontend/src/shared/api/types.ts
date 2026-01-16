@@ -93,3 +93,37 @@ export interface LoginHistoryPage {
   page: number;
   size: number;
 }
+
+// User Profile types
+export interface UserProfile {
+  id: number;
+  email: string;
+  role: 'USER' | 'ADMIN';
+  emailVerified: boolean;
+  displayName: string | null;
+  bio: string | null;
+  website: string | null;
+  company: string | null;
+  location: string | null;
+  country: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+}
+
+export interface UpdateProfileRequest {
+  displayName?: string | null;
+  bio?: string | null;
+  website?: string | null;
+  company?: string | null;
+  location?: string | null;
+  country?: string | null;
+}
+
+export interface ChangeEmailRequest {
+  newEmail: string;
+  password: string;
+}
+
+export interface DeleteAccountRequest {
+  password: string;
+}

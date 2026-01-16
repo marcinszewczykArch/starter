@@ -369,7 +369,66 @@ sequenceDiagram
     F-->>U: "Password changed! Please log in again."
 ```
 
+### User Profile Management
+
+Users can manage their profile information, avatar, and account settings.
+
+#### Profile Fields
+
+- **displayName**: Display name (max 100 characters)
+- **bio**: Biography/description (max 500 characters)
+- **website**: Personal website URL (max 255 characters)
+- **company**: Company name (max 100 characters)
+- **location**: Location/city (max 100 characters)
+- **country**: ISO 3166-1 alpha-2 country code (2 characters, e.g., "PL", "US")
+
+#### Avatar Management
+
+- Upload avatar image (JPEG, PNG, etc.)
+- Images are automatically resized to 400x400px
+- Converted to JPEG format with 85% quality
+- Maximum file size: 5MB (before processing)
+- Maximum processed size: 500KB
+- Avatars are stored in database as BYTEA
+- Public endpoint: `/api/users/{userId}/avatar` (no authentication required)
+
+#### Email Change Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant E as Email (Resend)
+
+    U->>F: Enter new email + password
+    F->>B: POST /api/users/me/change-email<br/>Authorization: Bearer {token}
+    B->>B: Verify password
+    B->>B: Check email availability
+    B->>B: Generate email change token
+    B->>E: Send verification email to new address
+    B-->>F: "Verification email sent"
+    
+    Note over U: User clicks link in email
+    U->>F: GET /verify-email?token=xxx
+    F->>B: POST /api/auth/verify-email
+    B->>B: Update email, mark verified
+    B-->>F: Success
+    F-->>U: "Email changed successfully"
+```
+
+#### Account Deletion (Soft Delete)
+
+- Account deletion is a **soft delete** (archived, not permanently removed)
+- Requires password confirmation
+- Sets `archived_at` timestamp
+- User cannot login after deletion
+- Email can be reused after account deletion
+- Data is preserved for potential account recovery
+
 ### API Endpoints
+
+#### Authentication
 
 | Endpoint | Method | Auth | Description |
 |----------|--------|------|-------------|
@@ -381,6 +440,23 @@ sequenceDiagram
 | `/api/auth/forgot-password` | POST | ❌ | Request password reset |
 | `/api/auth/reset-password` | POST | ❌ | Reset password with token |
 | `/api/auth/change-password` | POST | ✅ | Change password (logged in) |
+
+#### User Profile
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/users/me/profile` | GET | ✅ | Get current user's profile |
+| `/api/users/me/profile` | PUT | ✅ | Update user profile (displayName, bio, website, company, location, country) |
+| `/api/users/me/avatar` | POST | ✅ | Upload avatar image (max 5MB, resized to 400x400) |
+| `/api/users/me/avatar` | DELETE | ✅ | Delete user's avatar |
+| `/api/users/{userId}/avatar` | GET | ❌ | Get user avatar (public endpoint) |
+| `/api/users/me/change-email` | POST | ✅ | Request email change (sends verification to new email) |
+| `/api/users/me` | DELETE | ✅ | Delete (archive) user account |
+
+#### Examples
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
 | `/api/examples` | GET | ✅ | List examples (filtered by user) |
 | `/api/examples` | POST | ✅ | Create new example |
 

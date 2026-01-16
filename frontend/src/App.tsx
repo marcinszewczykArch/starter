@@ -5,6 +5,8 @@ import { LandingPage } from './core/common/pages/LandingPage';
 import { LoginPage } from './core/auth/pages/LoginPage';
 import { RegisterPage } from './core/auth/pages/RegisterPage';
 import { Dashboard } from './core/user/pages/Dashboard';
+import { SettingsPage } from './core/user/pages/SettingsPage';
+import { AdminUsersPage } from './core/admin/pages/AdminUsersPage';
 import VerifyEmailPage from './core/auth/pages/VerifyEmailPage';
 import { VerificationPendingPage } from './core/auth/pages/VerificationPendingPage';
 import { ForgotPasswordPage } from './core/auth/pages/ForgotPasswordPage';
@@ -70,6 +72,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute>
+            <AdminUsersPage />
           </ProtectedRoute>
         }
       />

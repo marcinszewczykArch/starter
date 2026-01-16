@@ -103,6 +103,41 @@ public class EmailService {
     }
 
     /**
+     * Send an email change verification email with a token link.
+     *
+     * @param toEmail recipient email address (new email)
+     * @param token   email change verification token
+     */
+    public void sendEmailChangeVerificationEmail(String toEmail, String token) {
+        String subject = "Confirm your new email - " + emailConfig.getAppName();
+        String encodedToken = URLEncoder.encode(token, StandardCharsets.UTF_8);
+        String confirmUrl = emailConfig.getBaseUrl() + "/confirm-email-change?token=" + encodedToken;
+
+        String htmlBody =
+            """
+                <!DOCTYPE html>
+                <html>
+                <body style="margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;">
+                    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px;">
+                        <h2 style="color: #333; margin-top: 0;">Confirm Email Change</h2>
+                        <p style="color: #555; font-size: 16px;">You requested to change your email address. Click the button below to confirm:</p>
+                        <p style="text-align: center; margin: 30px 0;">
+                            <a href="%s" style="background-color: #4F46E5; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; font-size: 16px;">Confirm Email Change</a>
+                        </p>
+                        <p style="color: #555; font-size: 14px;">Or copy this link:<br><a href="%s" style="color: #4F46E5;">%s</a></p>
+                        <p style="color: #555; font-size: 14px;">This link will expire in 1 hour.</p>
+                        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                        <p style="color: #999; font-size: 12px;">If you didn't request this change, you can ignore this email.</p>
+                    </div>
+                </body>
+                </html>
+                """
+                .formatted(confirmUrl, confirmUrl, confirmUrl);
+
+        sendEmail(toEmail, subject, htmlBody);
+    }
+
+    /**
      * Send an email via Resend API.
      *
      * @param toEmail recipient email address

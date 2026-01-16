@@ -13,8 +13,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.starter.core.email.EmailService;
 import com.starter.core.exception.EmailAlreadyExistsException;
+import com.starter.shared.util.TokenGenerator;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -26,11 +29,20 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private TokenGenerator tokenGenerator;
+
+    @Mock
+    private EmailService emailService;
+
     private UserService userService;
 
     @BeforeEach
     void setUp() {
-        userService = new UserService(userRepository);
+        userService = new UserService(userRepository, passwordEncoder, tokenGenerator, emailService);
     }
 
     @Test

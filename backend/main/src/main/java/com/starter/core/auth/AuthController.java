@@ -132,4 +132,18 @@ public class AuthController {
         );
         return MessageResponse.of("Password changed successfully");
     }
+
+    @PostMapping("/confirm-email-change")
+    @Operation(summary = "Confirm email change with token")
+    public MessageResponse confirmEmailChange(@RequestParam String token) {
+        authService.confirmEmailChange(token);
+        return MessageResponse.of("Email changed successfully");
+    }
+
+    @GetMapping("/confirm-email-change")
+    @Operation(summary = "Confirm email change with token (GET for email links)")
+    public MessageResponse confirmEmailChangeGet(@RequestParam String token) {
+        authService.confirmEmailChange(token);
+        return MessageResponse.of("Email changed successfully");
+    }
 }

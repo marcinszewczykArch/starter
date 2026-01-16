@@ -27,6 +27,26 @@ public class User {
     private Instant createdAt;
     private Instant updatedAt;
 
+    // Profile fields
+    private String displayName;
+    private String bio;
+    private String website;
+    private String company;
+    private String location;
+    private String country;
+
+    // Avatar
+    private byte[] avatar;
+    private String avatarContentType;
+
+    // Soft delete
+    private Instant archivedAt;
+
+    // Email change
+    private String pendingEmail;
+    private String emailChangeToken;
+    private Instant emailChangeTokenExpiresAt;
+
     /** User roles. */
     public enum Role {
         USER,
