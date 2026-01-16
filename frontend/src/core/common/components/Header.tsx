@@ -25,6 +25,10 @@ export function Header() {
     let blobUrl: string | null = null;
 
     const fetchAvatar = async () => {
+      if (!user?.avatarUrl || !token) {
+        return;
+      }
+
       try {
         const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
         const url = user.avatarUrl.startsWith('http')
