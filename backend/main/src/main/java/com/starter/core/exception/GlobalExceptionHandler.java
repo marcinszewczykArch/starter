@@ -102,6 +102,17 @@ public class GlobalExceptionHandler {
             .build();
     }
 
+    @ExceptionHandler(FileTooLargeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleFileTooLargeException(FileTooLargeException ex) {
+        log.warn("File too large: {}", ex.getMessage());
+
+        return ErrorResponse.builder()
+            .error("FILE_TOO_LARGE")
+            .message(ex.getMessage())
+            .build();
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleIllegalArgumentException(IllegalArgumentException ex) {

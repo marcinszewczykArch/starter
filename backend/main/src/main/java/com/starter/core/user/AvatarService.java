@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.starter.core.exception.FileTooLargeException;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -30,6 +32,7 @@ public class AvatarService {
      *
      * @param userId User ID
      * @param file   MultipartFile with image
+     * @throws FileTooLargeException                                if file exceeds size limit
      * @throws IllegalArgumentException                             if file is invalid
      * @throws com.starter.core.exception.ResourceNotFoundException if user not found
      */
@@ -46,7 +49,10 @@ public class AvatarService {
 
         // Validate file size
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("Avatar file must be less than 5MB");
+            throw new FileTooLargeException(
+                file.getSize(),
+                MAX_FILE_SIZE
+            );
         }
 
         // Validate content type

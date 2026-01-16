@@ -194,24 +194,21 @@ class UserControllerIntegrationTest extends BaseIntegrationTest {
     void uploadAvatar_shouldReturnBadRequest_whenFileTooLarge() {
         // given
         String token = createUserAndGetToken("largeavatar@example.com", "password123");
-        // Create a smaller but still invalid file (6MB exceeds 5MB limit)
-        // Note: Creating 6MB array in memory might be problematic, so we'll use a smaller test
-        byte[] largeBytes = new byte[6 * 1024 * 1024]; // 6MB - exceeds 5MB limit
+        // Create a file just over 5MB limit (5.1MB) - exceeds our validation limit
+        byte[] largeBytes = new byte[(int) (5.1 * 1024 * 1024)]; // 5.1MB - exceeds 5MB limit
 
         // when & then
-        try {
-            given()
-                .header("Authorization", "Bearer " + token)
-                .contentType("multipart/form-data")
-                .multiPart("file", "large.jpg", largeBytes, "image/jpeg")
-                .when()
-                .post("/api/users/me/avatar")
-                .then()
-                .statusCode(400);
-        } catch (Exception e) {
-            // If request fails due to size, that's also acceptable - the validation worked
-            // The important thing is that it didn't process a 6MB file
-        }
+        // Our validation should catch it and return 400 Bad Request with proper error message
+        given()
+            .header("Authorization", "Bearer " + token)
+            .contentType("multipart/form-data")
+            .multiPart("file", "large.jpg", largeBytes, "image/jpeg")
+            .when()
+            .post("/api/users/me/avatar")
+            .then()
+            .statusCode(400)
+            .body("error", equalTo("FILE_TOO_LARGE"))
+            .body("message", org.hamcrest.Matchers.containsString("exceeds maximum allowed size"));
     }
 
     @Test

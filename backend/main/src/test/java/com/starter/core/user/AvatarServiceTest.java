@@ -131,8 +131,8 @@ class AvatarServiceTest {
 
         // when & then
         assertThatThrownBy(() -> avatarService.saveAvatar(userId, largeFile))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Avatar file must be less than 5MB");
+            .isInstanceOf(com.starter.core.exception.FileTooLargeException.class)
+            .hasMessageContaining("exceeds maximum allowed size");
     }
 
     @Test

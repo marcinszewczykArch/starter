@@ -5,6 +5,10 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 10MB  # Allow up to 10MB for upload, we validate 5MB in code
+      max-request-size: 10MB
 
 server:
   port: 8080
