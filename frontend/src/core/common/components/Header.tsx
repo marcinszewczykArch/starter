@@ -11,8 +11,53 @@ export function Header() {
   const [copied, setCopied] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [avatarBlobUrl, setAvatarBlobUrl] = useState<string | null>(null);
   const isSettingsPage = location.pathname === '/settings';
   const isAdminUsersPage = location.pathname === '/admin/users';
+
+  // Fetch avatar as blob and create blob URL (needed because <img> can't send Authorization header)
+  useEffect(() => {
+    if (!user?.avatarUrl || !token) {
+      setAvatarBlobUrl(null);
+      return;
+    }
+
+    let blobUrl: string | null = null;
+
+    const fetchAvatar = async () => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const url = user.avatarUrl.startsWith('http')
+          ? user.avatarUrl
+          : `${baseUrl}${user.avatarUrl}`;
+
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          setAvatarBlobUrl(null);
+          return;
+        }
+
+        const blob = await response.blob();
+        blobUrl = URL.createObjectURL(blob);
+        setAvatarBlobUrl(blobUrl);
+      } catch (err) {
+        console.error('Failed to load avatar:', err);
+        setAvatarBlobUrl(null);
+      }
+    };
+
+    fetchAvatar();
+
+    // Cleanup: revoke blob URL when component unmounts or dependencies change
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [user?.avatarUrl, token]);
 
   const handleLogout = () => {
     logout();
@@ -67,11 +112,19 @@ export function Header() {
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                   aria-label="User menu"
                 >
-                  <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-indigo-600">
-                      {user?.email.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  {avatarBlobUrl ? (
+                    <img
+                      src={avatarBlobUrl}
+                      alt="Avatar"
+                      className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-indigo-600">
+                        {user?.email.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                 </button>
 
                 {/* Dropdown Menu */}
@@ -278,11 +331,19 @@ export function Header() {
                   className="flex items-center"
                   aria-label="User menu"
                 >
-                  <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-indigo-600">
-                      {user?.email.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  {avatarBlobUrl ? (
+                    <img
+                      src={avatarBlobUrl}
+                      alt="Avatar"
+                      className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-indigo-600">
+                        {user?.email.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                 </button>
 
                 {/* Mobile Dropdown */}

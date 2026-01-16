@@ -19,6 +19,7 @@ public class UserResponse {
     private String email;
     private String role;
     private boolean emailVerified;
+    private String avatarUrl; // URL to fetch avatar, null if no avatar
 
     /** Create UserResponse from User entity. */
     public static UserResponse fromUser(User user) {
@@ -27,16 +28,18 @@ public class UserResponse {
             .email(user.getEmail())
             .role(user.getRole().name())
             .emailVerified(user.isEmailVerified())
+            .avatarUrl(user.getAvatar() != null ? "/api/users/" + user.getId() + "/avatar" : null)
             .build();
     }
 
-    /** Create UserResponse from UserPrincipal. */
+    /** Create UserResponse from UserPrincipal (without avatar check - use fromUser for full data). */
     public static UserResponse fromPrincipal(UserPrincipal principal) {
         return UserResponse.builder()
             .id(principal.getId())
             .email(principal.getEmail())
             .role(principal.getRole().name())
             .emailVerified(principal.isEmailVerified())
+            .avatarUrl(null) // Avatar not available from principal, use fromUser instead
             .build();
     }
 }

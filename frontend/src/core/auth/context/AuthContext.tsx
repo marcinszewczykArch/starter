@@ -22,6 +22,7 @@ interface AuthContextType {
   login: (request: LoginRequest) => Promise<void>;
   register: (request: RegisterRequest) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,8 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       try {
         const currentUser = await authApi.getCurrentUser(token);
-        setUser(currentUser);
-        localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+        const userWithAvatar: User = {
+          id: currentUser.id,
+          email: currentUser.email,
+          role: currentUser.role,
+          emailVerified: currentUser.emailVerified,
+          avatarUrl: currentUser.avatarUrl ?? null,
+        };
+        setUser(userWithAvatar);
+        localStorage.setItem(USER_KEY, JSON.stringify(userWithAvatar));
       } catch {
         // Token invalid, clear auth state
         localStorage.removeItem(TOKEN_KEY);
@@ -72,6 +80,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     verifyToken();
   }, [token]);
 
+  // Refresh user data (e.g., after avatar upload)
+  const refreshUser = useCallback(async () => {
+    if (!token) return;
+    try {
+      const currentUser = await authApi.getCurrentUser(token);
+      const userWithAvatar: User = {
+        id: currentUser.id,
+        email: currentUser.email,
+        role: currentUser.role,
+        emailVerified: currentUser.emailVerified,
+        avatarUrl: currentUser.avatarUrl ?? null,
+      };
+      setUser(userWithAvatar);
+      localStorage.setItem(USER_KEY, JSON.stringify(userWithAvatar));
+    } catch {
+      // If refresh fails, don't clear auth - might be temporary network issue
+    }
+  }, [token]);
+
   const login = useCallback(async (request: LoginRequest) => {
     // Request GPS location if enabled (non-blocking, 3s timeout)
     const location = FEATURES.gpsEnabled ? await requestGpsLocation(3000) : null;
@@ -83,11 +110,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const response = await authApi.login(loginRequest);
+    // Fetch full user data to get avatarUrl
+    const currentUser = await authApi.getCurrentUser(response.token);
     const newUser: User = {
-      id: response.userId,
-      email: response.email,
-      role: response.role,
-      emailVerified: response.emailVerified,
+      id: currentUser.id,
+      email: currentUser.email,
+      role: currentUser.role,
+      emailVerified: currentUser.emailVerified,
+      avatarUrl: currentUser.avatarUrl ?? null,
     };
 
     localStorage.setItem(TOKEN_KEY, response.token);
@@ -98,11 +128,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (request: RegisterRequest) => {
     const response = await authApi.register(request);
+    // Fetch full user data to get avatarUrl
+    const currentUser = await authApi.getCurrentUser(response.token);
     const newUser: User = {
-      id: response.userId,
-      email: response.email,
-      role: response.role,
-      emailVerified: response.emailVerified,
+      id: currentUser.id,
+      email: currentUser.email,
+      role: currentUser.role,
+      emailVerified: currentUser.emailVerified,
+      avatarUrl: currentUser.avatarUrl ?? null,
     };
 
     localStorage.setItem(TOKEN_KEY, response.token);
@@ -139,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        refreshUser,
       }}
     >
       {children}

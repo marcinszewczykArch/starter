@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 
 interface AvatarUploadProps {
@@ -22,7 +22,53 @@ export function AvatarUpload({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarBlobUrl, setAvatarBlobUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch avatar as blob and create blob URL (needed because <img> can't send Authorization header)
+  useEffect(() => {
+    if (!currentAvatarUrl) {
+      setAvatarBlobUrl(null);
+      return;
+    }
+
+    let blobUrl: string | null = null;
+
+    const fetchAvatar = async () => {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const url = currentAvatarUrl.startsWith('http')
+          ? currentAvatarUrl
+          : `${baseUrl}${currentAvatarUrl}`;
+
+        const response = await fetch(url, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+
+        if (!response.ok) {
+          setAvatarBlobUrl(null);
+          return;
+        }
+
+        const blob = await response.blob();
+        blobUrl = URL.createObjectURL(blob);
+        setAvatarBlobUrl(blobUrl);
+      } catch (err) {
+        console.error('Failed to load avatar:', err);
+        setAvatarBlobUrl(null);
+      }
+    };
+
+    fetchAvatar();
+
+    // Cleanup: revoke blob URL when component unmounts or dependencies change
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
+    };
+  }, [currentAvatarUrl]);
 
   const onCropComplete = useCallback((_: Area, croppedPixels: Area) => {
     setCroppedAreaPixels(croppedPixels);
@@ -245,11 +291,14 @@ export function AvatarUpload({
     <div className="flex items-center gap-6">
       {/* Avatar preview */}
       <div className="relative">
-        {currentAvatarUrl ? (
+        {avatarBlobUrl ? (
           <img
-            src={currentAvatarUrl}
+            src={avatarBlobUrl}
             alt="Avatar"
             className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+            onError={() => {
+              setAvatarBlobUrl(null);
+            }}
           />
         ) : (
           <div className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center border-4 border-white shadow-lg">

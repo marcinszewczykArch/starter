@@ -11,7 +11,7 @@ import type { UserProfile, UpdateProfileRequest } from '../../../shared/api/type
 type SettingsTab = 'profile' | 'account';
 
 export function SettingsPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -44,12 +44,16 @@ export function SettingsPage() {
     await userApi.uploadAvatar(blob);
     // Refresh profile to get new avatar URL
     await fetchProfile();
+    // Refresh user data in AuthContext to update avatar in Header
+    await refreshUser();
   };
 
   const handleDeleteAvatar = async () => {
     await userApi.deleteAvatar();
     // Refresh profile to get updated avatar URL
     await fetchProfile();
+    // Refresh user data in AuthContext to update avatar in Header
+    await refreshUser();
   };
 
   const handleChangeEmail = async (newEmail: string, password: string) => {

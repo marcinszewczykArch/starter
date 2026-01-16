@@ -19,6 +19,7 @@ export interface User {
   email: string;
   role: 'USER' | 'ADMIN';
   emailVerified?: boolean;
+  avatarUrl?: string | null; // URL to fetch avatar, null if no avatar
 }
 
 export interface AuthResponse {

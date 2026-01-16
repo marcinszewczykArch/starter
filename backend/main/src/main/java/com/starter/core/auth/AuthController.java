@@ -38,6 +38,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final EmailVerificationService emailVerificationService;
+    private final com.starter.core.user.UserService userService;
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
@@ -78,7 +79,10 @@ public class AuthController {
     @GetMapping("/me")
     @Operation(summary = "Get current user info", security = @SecurityRequirement(name = "bearerAuth"))
     public UserResponse getCurrentUser(@AuthenticationPrincipal UserPrincipal principal) {
-        return UserResponse.fromPrincipal(principal);
+        // Get full user data to include avatar URL
+        return userService.findById(principal.getId())
+            .map(UserResponse::fromUser)
+            .orElse(UserResponse.fromPrincipal(principal));
     }
 
     @PostMapping("/verify-email")
