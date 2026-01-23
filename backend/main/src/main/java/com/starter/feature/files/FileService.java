@@ -27,7 +27,7 @@ import java.util.UUID;
  * Atomicity strategy:
  * - Upload: DB first, then S3 (if S3 fails → rollback DB)
  * - Delete: DB first, then S3 (if S3 fails → orphaned file, but user sees success)
- * 
+ *
  * Only created if S3Client bean exists (i.e., S3_BUCKET_NAME is set).
  */
 @Slf4j

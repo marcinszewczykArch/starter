@@ -121,15 +121,13 @@ export function FilesPage() {
                   storageUsage.percentage >= 90
                     ? 'bg-red-500'
                     : storageUsage.percentage >= 70
-                    ? 'bg-yellow-500'
-                    : 'bg-indigo-500'
+                      ? 'bg-yellow-500'
+                      : 'bg-indigo-500'
                 }`}
                 style={{ width: `${Math.min(storageUsage.percentage, 100)}%` }}
               />
             </div>
-            <p className="mt-2 text-xs text-gray-500">
-              {storageUsage.percentage.toFixed(1)}% used
-            </p>
+            <p className="mt-2 text-xs text-gray-500">{storageUsage.percentage.toFixed(1)}% used</p>
           </div>
         )}
 
@@ -142,7 +140,9 @@ export function FilesPage() {
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <p className="text-sm text-gray-600">Total Size</p>
-              <p className="text-2xl font-bold text-gray-900">{formatBytes(fileStats.totalSizeBytes)}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatBytes(fileStats.totalSizeBytes)}
+              </p>
             </div>
           </div>
         )}
@@ -158,9 +158,7 @@ export function FilesPage() {
               disabled={uploading}
               className="flex-1 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
             />
-            {uploading && (
-              <span className="text-sm text-gray-500">Uploading...</span>
-            )}
+            {uploading && <span className="text-sm text-gray-500">Uploading...</span>}
           </div>
         </div>
 
