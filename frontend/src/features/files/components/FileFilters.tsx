@@ -2,7 +2,7 @@ interface FileFiltersProps {
   contentType: string | null;
   search: string | null;
   onContentTypeChange: (contentType: string | null) => void;
-  onSearchChange: (search: string) => void;
+  onSearchChange: (search: string | null) => void;
 }
 
 export function FileFilters({
