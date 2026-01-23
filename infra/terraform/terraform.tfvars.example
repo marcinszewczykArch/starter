@@ -13,6 +13,11 @@ ec2_key_name       = "your-key-pair-name"  # Must exist in AWS!
 # Security - restrict SSH to your IP
 allowed_ssh_cidr = "1.2.3.4/32"  # Your public IP
 
+# S3 CORS configuration (comma-separated origins for presigned URLs)
+# For production, use your domain: "https://yourdomain.com"
+# For development, you can use: "http://localhost:5173,http://localhost:3000"
+cors_allowed_origins = "*"  # Change to your domain in production!
+
 # Note: PostgreSQL runs in Docker on EC2 (no RDS needed)
 # Email is handled via Resend (API key in GitHub Secrets: RESEND_API_KEY)
 # Database credentials are managed via GitHub Secrets:

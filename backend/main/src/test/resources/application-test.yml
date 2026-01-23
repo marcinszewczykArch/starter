@@ -4,11 +4,13 @@ spring:
     username: postgres
     password: postgres
 
+app:
+  storage:
+    s3-bucket-name: test-bucket
+    s3-region: eu-central-1
+  email:
+    enabled: false
+
 logging:
   level:
     com.starter: DEBUG
-
-# Disable email sending during tests
-app:
-  email:
-    enabled: false

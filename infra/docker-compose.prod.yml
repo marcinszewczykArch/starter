@@ -38,6 +38,8 @@ services:
       - EMAIL_FROM=${EMAIL_FROM:-noreply@ig4s.pl}
       - APP_NAME=${APP_NAME:-Starter App}
       - APP_BASE_URL=${APP_BASE_URL}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME}
+      - S3_REGION=${S3_REGION:-eu-central-1}
     expose:
       - "8080"
     depends_on:

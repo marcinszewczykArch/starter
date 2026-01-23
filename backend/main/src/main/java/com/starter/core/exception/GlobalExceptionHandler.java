@@ -124,6 +124,18 @@ public class GlobalExceptionHandler {
             .build();
     }
 
+    @ExceptionHandler(com.starter.feature.files.exception.StorageQuotaExceededException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleStorageQuotaExceeded(
+        com.starter.feature.files.exception.StorageQuotaExceededException ex
+    ) {
+        log.warn("Storage quota exceeded: {}", ex.getMessage());
+        return ErrorResponse.builder()
+            .error("STORAGE_QUOTA_EXCEEDED")
+            .message(ex.getMessage())
+            .build();
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleAccessDeniedException(AccessDeniedException ex) {

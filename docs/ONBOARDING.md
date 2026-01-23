@@ -143,12 +143,34 @@ Add these secrets:
 | `CORS_ALLOWED_ORIGINS` | `https://yourdomain.com` | Your domain |
 | `GRAFANA_PASSWORD` | `GrafanaPass123!` | Your choice |
 | `RESEND_API_KEY` | `re_xxxxx...` | From Resend dashboard |
+| `S3_BUCKET_NAME` | `starter-files-prod` | See S3 Configuration below |
+| `S3_REGION` | `eu-central-1` | AWS region (must match Terraform) |
 
 **Generate JWT Secret:**
 ```bash
 openssl rand -base64 32
 # Example output: Cl+N3RD0LitWw3jREk4ZWQPzIjzIFr1W2gKge4flvlc=
 ```
+
+**S3 Configuration (File Storage):**
+The S3 bucket is created automatically by Terraform. To get the bucket name:
+
+```bash
+cd infra/terraform
+
+# Method 1: Try Terraform output
+terraform output s3_bucket_name
+
+# Method 2: If output doesn't work, use state directly
+terraform state show aws_s3_bucket.user_files | grep "^bucket"
+# Copy the value after "bucket = " (without quotes)
+```
+
+The bucket name follows the pattern: `{app_name}-files-{environment}` (e.g., `starter-files-prod`).
+
+Use the same region as in your `terraform.tfvars` (default: `eu-central-1`).
+
+> **Note:** Without these secrets, the file storage feature will be disabled, but the application will still work normally.
 
 ### Step 5: Configure Email (Resend)
 

@@ -460,6 +460,26 @@ sequenceDiagram
 | `/api/examples` | GET | ✅ | List examples (filtered by user) |
 | `/api/examples` | POST | ✅ | Create new example |
 
+#### File Storage
+
+| Endpoint | Method | Auth | Description |
+|----------|--------|------|-------------|
+| `/api/files` | POST | ✅ | Upload file (max 100MB per file, 1GB total per user) |
+| `/api/files` | GET | ✅ | List files (paginated, with filters and search) |
+| `/api/files/stats` | GET | ✅ | Get file statistics (count and total size) |
+| `/api/files/storage/usage` | GET | ✅ | Get storage usage (used/max/percentage) |
+| `/api/files/{id}/download` | GET | ✅ | Get presigned download URL (valid 60 minutes) |
+| `/api/files/{id}` | DELETE | ✅ | Delete file |
+
+**Features:**
+- Upload files (max 100MB per file)
+- List files with pagination
+- Search files by filename
+- Filter by content type (images, PDF, ZIP, text files)
+- Download files via presigned URLs
+- Storage usage tracking (1GB limit per user)
+- Automatic file deletion when account is deleted
+
 ### Frontend Authentication
 
 The frontend uses React Context (`AuthContext`) to manage authentication state:
@@ -502,6 +522,7 @@ Rate limiting is handled by **nginx** (no application code needed).
 | Endpoint | Limit | Burst | Purpose |
 |----------|-------|-------|---------|
 | `/api/auth/*` | 1 req/sec | 3 | Brute-force protection |
+| `/api/files` | 10 req/sec | 5 | File upload protection (longer timeout) |
 | `/api/*` | 10 req/sec | 20 | General API protection |
 
 ### How it works
@@ -552,6 +573,8 @@ To change limits, modify the `rate=` value and redeploy.
 | `JWT_SECRET` | (dev default) | JWT signing secret (min 32 chars) |
 | `JWT_EXPIRATION_MS` | 86400000 | Token expiration (24h default) |
 | `CORS_ALLOWED_ORIGINS` | localhost:5173,3000 | Allowed CORS origins |
+| `S3_BUCKET_NAME` | - | S3 bucket name for user files |
+| `S3_REGION` | eu-central-1 | AWS region for S3 bucket |
 
 #### Frontend
 
@@ -569,6 +592,8 @@ To change limits, modify the `rate=` value and redeploy.
 - PostgreSQL 17
 - Flyway
 - SpringDoc OpenAPI (Swagger)
+- AWS SDK for S3
+- Spring Retry
 - Spotless + Error Prone + NullAway
 
 ### Frontend
@@ -684,10 +709,14 @@ terraform plan      # Review changes
 terraform apply     # Create resources (type 'yes')
 ```
 
-Save the output:
+Save the outputs:
 ```
 ec2_public_ip = "12.34.56.78"
+s3_bucket_name = "starter-files-prod"
 ```
+
+**📦 S3 Bucket:**
+The S3 bucket for user files is automatically created by Terraform. The bucket name is shown in the `s3_bucket_name` output. Save this value - you'll need it for GitHub Secrets.
 
 ---
 
@@ -708,6 +737,57 @@ Click **New repository secret** for each:
 | `CORS_ALLOWED_ORIGINS` | `https://yourdomain.com` | Allowed CORS origins (comma separated) |
 | `GRAFANA_PASSWORD` | `GrafanaSecret123!` | Grafana admin password |
 | `RESEND_API_KEY` | `re_xxxxx...` | Resend API key for emails |
+| `S3_BUCKET_NAME` | `starter-files-prod` | S3 bucket name from Terraform output (`s3_bucket_name`) |
+| `S3_REGION` | `eu-central-1` | AWS region (must match `aws_region` in Terraform) |
+
+**📦 S3 Configuration (File Storage Feature):**
+
+**What are these variables for?**
+- `S3_BUCKET_NAME` - S3 bucket name where user files are stored (max 1GB per user)
+- `S3_REGION` - AWS region where the bucket is located (must match `aws_region` in Terraform)
+
+**How to get the values?**
+
+1. **Bucket name** - After running `terraform apply`, the bucket is automatically created. Find the bucket name using one of these methods:
+
+   **Method 1: From Terraform output (if it works):**
+   ```bash
+   cd infra/terraform
+   terraform output s3_bucket_name
+   ```
+
+   **Method 2: From Terraform state (directly - if output doesn't work):**
+   ```bash
+   cd infra/terraform
+   terraform state show aws_s3_bucket.user_files | grep "^bucket"
+   ```
+   Output: `bucket = "starter-files-prod"` - copy the value after `=` (without quotes)
+
+   **Method 3: From AWS Console:**
+   - Go to **AWS Console → S3 → Buckets**
+   - Find bucket named: `{app_name}-files-{environment}` (e.g., `starter-files-prod`)
+
+   **Method 4: From Terraform naming pattern (if you know the values):**
+   - Bucket name is: `{app_name}-files-{environment}`
+   - Example: if `app_name = "starter"` and `environment = "prod"`, bucket is: `starter-files-prod`
+
+2. **Region** - Use the same region as in your `terraform.tfvars` (default: `eu-central-1`)
+
+**How do they work in the application?**
+- Application uses these variables to configure AWS S3 client
+- Without these variables, file storage feature **will not work** (app will start, but upload/delete will be disabled)
+- Variables are passed to the application via Docker Compose as environment variables
+- EC2 instance uses IAM Role to access S3 (no AWS Access Keys needed - access is automatic via IAM)
+
+**What happens if you don't set them?**
+- ✅ Application will start successfully (no errors)
+- ❌ File storage feature will be **disabled** (endpoints `/api/files` won't be available)
+- ❌ Users won't be able to upload/browse/delete files
+- ✅ This is safe - application works in "graceful degradation" mode (optional feature)
+
+**Example values:**
+- `S3_BUCKET_NAME`: `starter-files-prod`
+- `S3_REGION`: `eu-central-1`
 
 **📧 Email Configuration (Resend):**
 

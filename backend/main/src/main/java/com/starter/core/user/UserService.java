@@ -2,6 +2,7 @@ package com.starter.core.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,10 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final TokenGenerator tokenGenerator;
     private final EmailService emailService;
+
+    // Optional dependency - only available if files feature is implemented
+    @Autowired(required = false)
+    private com.starter.feature.files.FileService fileService;
 
     /** Find user by email. */
     public Optional<User> findByEmail(String email) {
@@ -122,7 +127,7 @@ public class UserService {
     }
 
     /**
-     * Delete (archive) user account.
+     * Delete (archive) user account and all associated files.
      *
      * @param userId   User ID
      * @param password User password for verification
@@ -140,6 +145,19 @@ public class UserService {
         if (!passwordEncoder.matches(password, user.getPassword())) {
             log.warn("Account deletion failed: incorrect password for user ID {}", userId);
             throw new InvalidCredentialsException("Password is incorrect");
+        }
+
+        // Delete all user files from S3 and database (if files feature is implemented)
+        if (fileService != null) {
+            try {
+                fileService.deleteAllUserFiles(userId);
+                log.info("Deleted all files for user ID: {}", userId);
+            } catch (Exception e) {
+                log.error("Failed to delete user files for user ID {}: {}", userId, e.getMessage(), e);
+                // Continue with account deletion even if file deletion fails
+            }
+        } else {
+            log.debug("FileService not available - skipping file deletion (files feature not implemented)");
         }
 
         // Soft delete (archive)

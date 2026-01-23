@@ -283,6 +283,8 @@ jobs:
             EMAIL_FROM=noreply@ig4s.pl
             APP_NAME=Starter App
             APP_BASE_URL=https://ig4s.pl
+            S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+            S3_REGION=${{ secrets.S3_REGION }}
             BACKEND_IMAGE=ghcr.io/${{ env.OWNER_LC }}/starter-backend:${{ github.sha }}
             FRONTEND_IMAGE=ghcr.io/${{ env.OWNER_LC }}/starter-frontend:${{ github.sha }}
             EOF

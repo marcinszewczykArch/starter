@@ -15,6 +15,7 @@ This directory contains Architecture Decision Records for the Starter applicatio
 | [ADR-007](adr-007-spot-instances.md) | EC2 Spot Instances | Accepted |
 | [ADR-008](adr-008-package-separation.md) | Package Separation (Core vs Feature) | Accepted |
 | [ADR-009](adr-009-login-history-geolocation.md) | Login History and Geolocation Tracking | Accepted |
+| [ADR-010](adr-010-file-storage-s3.md) | File Storage with AWS S3 | Accepted |
 
 ## What is an ADR?
 

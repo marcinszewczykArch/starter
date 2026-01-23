@@ -7,6 +7,7 @@ import { RegisterPage } from './core/auth/pages/RegisterPage';
 import { Dashboard } from './core/user/pages/Dashboard';
 import { SettingsPage } from './core/user/pages/SettingsPage';
 import { AdminUsersPage } from './core/admin/pages/AdminUsersPage';
+import { FilesPage } from './features/files/pages/FilesPage';
 import VerifyEmailPage from './core/auth/pages/VerifyEmailPage';
 import { VerificationPendingPage } from './core/auth/pages/VerificationPendingPage';
 import { ForgotPasswordPage } from './core/auth/pages/ForgotPasswordPage';
@@ -80,6 +81,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/files"
+        element={
+          <ProtectedRoute>
+            <FilesPage />
           </ProtectedRoute>
         }
       />

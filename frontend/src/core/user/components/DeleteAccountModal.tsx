@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface DeleteAccountModalProps {
   isOpen: boolean;
@@ -7,11 +7,46 @@ interface DeleteAccountModalProps {
   email: string;
 }
 
+interface FileStats {
+  fileCount: number;
+  totalSizeBytes: number;
+}
+
 export function DeleteAccountModal({ isOpen, onClose, onConfirm, email }: DeleteAccountModalProps) {
   const [password, setPassword] = useState('');
   const [confirmText, setConfirmText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fileStats, setFileStats] = useState<FileStats | null>(null);
+
+  // Fetch file statistics when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchFileStats();
+    }
+  }, [isOpen]);
+
+  const fetchFileStats = async () => {
+    try {
+      // Try to fetch file stats - if files feature is not implemented, this will fail gracefully
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      const response = await fetch(`${baseUrl}/api/files/stats`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      });
+      if (response.ok) {
+        const stats = await response.json();
+        setFileStats(stats);
+      } else {
+        // Files feature not implemented or no files - set to null
+        setFileStats(null);
+      }
+    } catch (err) {
+      // Files feature not implemented - set to null
+      setFileStats(null);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -47,14 +82,30 @@ export function DeleteAccountModal({ isOpen, onClose, onConfirm, email }: Delete
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800">
-              <strong>Warning:</strong> This action cannot be easily undone. Your account will be
-              deactivated and you won't be able to log in.
+            <p className="text-sm text-red-800 font-semibold mb-2">
+              ⚠️ Warning: This action cannot be undone!
             </p>
+            <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+              <li>Your account will be permanently deactivated</li>
+              <li>You won't be able to log in anymore</li>
+              {fileStats && fileStats.fileCount > 0 && (
+                <>
+                  <li className="font-semibold">
+                    All your files ({fileStats.fileCount} file{fileStats.fileCount !== 1 ? 's' : ''}
+                    , {formatFileSize(fileStats.totalSizeBytes)}) will be permanently deleted
+                  </li>
+                </>
+              )}
+            </ul>
           </div>
 
           <p className="text-sm text-gray-600">
             You are about to delete the account for <strong>{email}</strong>.
+            {fileStats && fileStats.fileCount > 0 && (
+              <span className="block mt-2 text-red-600 font-medium">
+                This will also delete all {fileStats.fileCount} of your uploaded files permanently.
+              </span>
+            )}
           </p>
 
           <div>
@@ -115,4 +166,12 @@ export function DeleteAccountModal({ isOpen, onClose, onConfirm, email }: Delete
       </div>
     </div>
   );
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
