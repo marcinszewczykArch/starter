@@ -13,6 +13,8 @@ import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import jakarta.annotation.PostConstruct;
+
 import java.time.Duration;
 import java.util.List;
 
@@ -29,6 +31,18 @@ public class S3Service {
 
     @Value("${app.storage.s3-bucket-name}")
     private String bucketName;
+
+    @PostConstruct
+    private void validateBucketName() {
+        log.info("S3Service initialization - bucketName: '{}'", bucketName);
+        if (bucketName == null || bucketName.isBlank()) {
+            log.error("S3 bucket name is null or blank! S3_BUCKET_NAME environment variable is not set.");
+            throw new IllegalStateException(
+                "S3 bucket name is not configured. Set S3_BUCKET_NAME environment variable."
+            );
+        }
+        log.info("S3Service initialized successfully with bucket: {}", bucketName);
+    }
 
     /**
      * Upload file to S3 with retry logic.

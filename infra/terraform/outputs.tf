@@ -23,3 +23,8 @@ output "db_connection_info" {
   value       = "SSH tunnel: ssh -L 5432:localhost:5432 ec2-user@${aws_eip.app.public_ip}"
 }
 
+output "s3_bucket_name" {
+  description = "S3 bucket name for user files"
+  value       = aws_s3_bucket.user_files.id
+}
+

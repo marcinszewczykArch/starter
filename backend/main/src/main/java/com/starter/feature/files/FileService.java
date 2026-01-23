@@ -165,13 +165,19 @@ public class FileService {
      */
     @Cacheable(value = "fileStats", key = "#userId", unless = "#result.fileCount == 0")
     public FileStatsDto getFileStats(Long userId) {
-        long totalSize = fileRepository.getTotalSizeByUserId(userId);
-        long fileCount = fileRepository.countByUserId(userId);
-
-        return FileStatsDto.builder()
-            .fileCount((int) fileCount)
-            .totalSizeBytes(totalSize)
-            .build();
+        log.debug("Getting file stats for user: {}", userId);
+        try {
+            long totalSize = fileRepository.getTotalSizeByUserId(userId);
+            long fileCount = fileRepository.countByUserId(userId);
+            log.debug("File stats retrieved - count: {}, totalSize: {}", fileCount, totalSize);
+            return FileStatsDto.builder()
+                .fileCount((int) fileCount)
+                .totalSizeBytes(totalSize)
+                .build();
+        } catch (Exception e) {
+            log.error("Error getting file stats for user: {}", userId, e);
+            throw e;
+        }
     }
 
     /**

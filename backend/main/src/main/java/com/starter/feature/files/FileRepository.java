@@ -1,6 +1,7 @@
 package com.starter.feature.files;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -19,6 +20,7 @@ import java.util.Optional;
  * Repository for UserFile entity using JdbcClient.
  * Provides methods for file operations with pagination, filtering, and search.
  */
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class FileRepository {
@@ -91,23 +93,39 @@ public class FileRepository {
      * Get total size without lock (for stats display).
      */
     public Long getTotalSizeByUserId(Long userId) {
-        return jdbcClient
-            .sql("SELECT COALESCE(SUM(size_bytes), 0) FROM user_files WHERE user_id = :userId")
-            .param("userId", userId)
-            .query(Long.class)
-            .optional()
-            .orElse(0L);
+        log.debug("Getting total size for user: {}", userId);
+        try {
+            Long result = jdbcClient
+                .sql("SELECT COALESCE(SUM(size_bytes), 0) FROM user_files WHERE user_id = :userId")
+                .param("userId", userId)
+                .query(Long.class)
+                .optional()
+                .orElse(0L);
+            log.debug("Total size for user {}: {}", userId, result);
+            return result;
+        } catch (Exception e) {
+            log.error("Error getting total size for user: {}", userId, e);
+            throw e;
+        }
     }
 
     /**
      * Count files by user ID.
      */
     public long countByUserId(Long userId) {
-        return jdbcClient
-            .sql("SELECT COUNT(*) FROM user_files WHERE user_id = :userId")
-            .param("userId", userId)
-            .query(Long.class)
-            .single();
+        log.debug("Counting files for user: {}", userId);
+        try {
+            long result = jdbcClient
+                .sql("SELECT COUNT(*) FROM user_files WHERE user_id = :userId")
+                .param("userId", userId)
+                .query(Long.class)
+                .single();
+            log.debug("File count for user {}: {}", userId, result);
+            return result;
+        } catch (Exception e) {
+            log.error("Error counting files for user: {}", userId, e);
+            throw e;
+        }
     }
 
     /**

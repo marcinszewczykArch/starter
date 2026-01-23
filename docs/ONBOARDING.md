@@ -166,7 +166,9 @@ terraform state show aws_s3_bucket.user_files | grep "^bucket"
 # Copy the value after "bucket = " (without quotes)
 ```
 
-The bucket name follows the pattern: `{app_name}-files-{environment}` (e.g., `starter-files-prod`).
+The bucket name 
+
+follows the pattern: `{app_name}-files-{environment}` (e.g., `starter-files-prod`).
 
 Use the same region as in your `terraform.tfvars` (default: `eu-central-1`).
 

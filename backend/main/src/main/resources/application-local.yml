@@ -12,3 +12,8 @@ logging:
 app:
   email:
     enabled: false
+  storage:
+    # For local development, you can use a test bucket or leave empty (feature will be disabled)
+    # To test file storage locally, create an S3 bucket and set its name here
+    s3-bucket-name: ${S3_BUCKET_NAME:}
+    s3-region: ${S3_REGION:eu-central-1}

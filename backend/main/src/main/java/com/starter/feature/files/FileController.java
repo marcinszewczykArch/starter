@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,6 +26,7 @@ import java.io.IOException;
  * REST controller for file operations.
  * Only created if S3Client bean exists (i.e., S3_BUCKET_NAME is set).
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
@@ -87,8 +89,15 @@ public class FileController {
     public ResponseEntity<FileStatsDto> getFileStats(
         @AuthenticationPrincipal UserPrincipal principal
     ) {
-        FileStatsDto stats = fileService.getFileStats(principal.getId());
-        return ResponseEntity.ok(stats);
+        log.debug("GET /api/files/stats called for user: {}", principal.getId());
+        try {
+            FileStatsDto stats = fileService.getFileStats(principal.getId());
+            log.debug("File stats retrieved successfully for user: {}", principal.getId());
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("Error in getFileStats endpoint for user: {}", principal.getId(), e);
+            throw e;
+        }
     }
 
     @GetMapping("/storage/usage")
