@@ -73,15 +73,21 @@ public class FileRepository {
      * Get total size with lock (for race condition prevention).
      * Uses SELECT FOR UPDATE to lock rows during transaction.
      * ORDER BY ensures deterministic lock order to prevent deadlocks.
+     *
+     * Note: PostgreSQL doesn't allow FOR UPDATE with aggregate functions,
+     * so we use a subquery to lock rows first, then sum them.
      */
     public Long getTotalSizeWithLock(Long userId) {
         return jdbcClient
             .sql("""
                 SELECT COALESCE(SUM(size_bytes), 0)
-                FROM user_files
-                WHERE user_id = :userId
-                ORDER BY id
-                FOR UPDATE
+                FROM (
+                    SELECT size_bytes
+                    FROM user_files
+                    WHERE user_id = :userId
+                    ORDER BY id
+                    FOR UPDATE
+                ) AS locked_rows
                 """)
             .param("userId", userId)
             .query(Long.class)
