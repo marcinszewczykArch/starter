@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import com.starter.core.security.UserPrincipal;
 import com.starter.feature.files.dto.*;
@@ -24,13 +22,11 @@ import java.io.IOException;
 
 /**
  * REST controller for file operations.
- * Only created if S3Client bean exists (i.e., S3_BUCKET_NAME is set).
  */
 @Slf4j
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
-@ConditionalOnBean(S3Client.class)
 @Tag(name = "Files", description = "File storage and management API")
 @SecurityRequirement(name = "bearerAuth")
 public class FileController {

@@ -3,7 +3,6 @@ package com.starter.feature.files;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -11,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.S3Client;
 
 import com.starter.core.exception.ResourceNotFoundException;
 import com.starter.feature.files.dto.*;
@@ -27,13 +25,10 @@ import java.util.UUID;
  * Atomicity strategy:
  * - Upload: DB first, then S3 (if S3 fails → rollback DB)
  * - Delete: DB first, then S3 (if S3 fails → orphaned file, but user sees success)
- *
- * Only created if S3Client bean exists (i.e., S3_BUCKET_NAME is set).
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnBean(S3Client.class)
 public class FileService {
     private final FileRepository fileRepository;
     private final S3Service s3Service;

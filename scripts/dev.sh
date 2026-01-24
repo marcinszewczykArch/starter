@@ -13,6 +13,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# S3 Configuration for LocalStack
+S3_BUCKET_NAME="starter-files-local"
+S3_REGION="us-east-1"
+S3_ENDPOINT="http://localhost:4566"
+
 # Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -55,6 +60,20 @@ until docker compose -f "$PROJECT_ROOT/infra/docker-compose.dev.yml" exec -T pos
 done
 echo -e "${GREEN}✅ PostgreSQL is ready${NC}"
 
+# Wait for LocalStack to be ready and create S3 bucket
+echo ""
+echo "☁️  Waiting for LocalStack to be ready..."
+until curl -s http://localhost:4566/_localstack/health >/dev/null 2>&1; do
+    sleep 1
+done
+echo -e "${GREEN}✅ LocalStack is ready${NC}"
+
+# Create S3 bucket in LocalStack
+echo "📦 Creating S3 bucket in LocalStack..."
+aws --endpoint-url=$S3_ENDPOINT s3 mb s3://$S3_BUCKET_NAME 2>/dev/null || \
+  (echo "Note: Bucket may already exist" && true)
+echo -e "${GREEN}✅ S3 bucket '$S3_BUCKET_NAME' is ready${NC}"
+
 # Install frontend dependencies if needed
 if [ ! -d "$PROJECT_ROOT/frontend/node_modules" ]; then
     echo ""
@@ -67,6 +86,9 @@ fi
 echo ""
 echo "☕ Starting backend..."
 cd "$PROJECT_ROOT"
+export S3_BUCKET_NAME
+export S3_REGION
+export S3_ENDPOINT
 SPRING_PROFILES_ACTIVE=local ./gradlew :backend:main:bootRun --no-daemon &
 BACKEND_PID=$!
 
@@ -103,6 +125,7 @@ echo "   Frontend:    http://localhost:5173"
 echo "   Backend:     http://localhost:8080"
 echo "   Swagger UI:  http://localhost:8080/swagger-ui.html"
 echo "   Health:      http://localhost:8080/actuator/health"
+echo "   LocalStack:  http://localhost:4566"
 echo ""
 echo "👤 Test Users:"
 echo "   Admin:  admin@starter.com / password123"
